@@ -1,0 +1,100 @@
+
+Project - Edubotnet 
+    - Purpose: Create a HTTP based botnet, to learn more about OOP, project design, and programming/coding in general 
+    
+    - Scope:
+        The project does not care about operation security (OPSEC), as the project is only created 
+        for educational purposes only. 
+
+        The project will only be Proof of Concept, in order to make sure 
+
+    - Tech Stack: 
+        - Python Flask 
+        - SQLAlchemy 
+
+Components 
+    - Server.py     - Python Flask Server 
+    - Implant.py    - Implant
+    - Master.py     - CLI 
+
+Workflow 
+    1. Bot heartbeat --> Server
+        - [POST] /heartbeat 
+        - data: ipaddr, botkey  
+
+    2. Server replies with /register endpoint
+        - if) ipaddr exists in db           return) registered
+        - if) ipaddr does not exists in db  return) register_key 
+
+    3. Bot registers with secret key
+        - [POST] /register
+        - data: bot_ipaddr, OS type, OS version 
+
+    4. Server inputs the bot into the database
+    
+    5. Master updates the /bot/<ip_address>/task
+    
+    6. Bot visits /bot/<ip_address/task every 20~30 seconds 
+
+
+    [ Fallback ] 
+    - If firstcontact fails) If the server does not exist, then visit pastebin (HARDCODE)
+    - Pastebin contains other C2 server's IP / domain name 
+
+Server API - Development (NO OPSEC)
+    - /firstcontact 
+        - [POST]
+        - (data) ipaddr: <ip> & botkey: <hardcode>
+
+    - /register
+        - [POST]
+        - (data) ipaddr: <botip> & register_key: <key> & ostype: <.> & osversion: <.>
+
+    - /bot/list
+        - [POST] [PUT?]
+        - (data) master_key: <key> 
+        
+        - [POST] - Shows the current list of bots, only for the master 
+        - [PUT] - Update the current list of bots. This should be done after /register happens 
+
+    - /bot/<ip_address>/task 
+        - [GET] [PUT] 
+        - [GET] - Retrieves command that's in /bot/<ip_address>/task 
+        - [PUT] - Master is able to update the command to be ran 
+
+        - Future work (OPSEC)
+            - Make is [POST], and make the bot to send the register key in order to view the task 
+            - Accepts master key, which 
+
+    - /bot/<ip_address>/result 
+        - [POST]
+        - (data) result: <result>
+        - The bot will post the result of the last command ran 
+
+        - Future work (OPSEC)
+            - Make the bot to send the register key in order to view the task 
+
+Client Implant
+    - Persistence 
+        - userland persistence --> Runs the implant every 20~40 seconds, randomly  
+
+
+Master Concerns 
+    - How would the master know if the bot have fetched the task? 
+    - How would the master 
+
+
+Server.py 
+    - API based HTTP Python Flask Server 
+    
+    - Dynamic route 
+
+
+References:
+    - Dynamic routes and URLs 
+    (https://stackoverflow.com/questions/35107885/how-to-generate-dynamic-urls-in-flask)
+
+======================================================================================================
+
+
+
