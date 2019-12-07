@@ -35,6 +35,20 @@ def test_register():
     print ("[+] Testing register... ")
     print (res.text + '\n')
 
+def test_botpush(bot_id):
+    url = 'http://localhost:5000/bot/' + bot_id + '/push'
+
+    masterkey = 'masterkey'
+    cmd = 'id'
+
+    data = { 'masterkey': masterkey, 'cmd': cmd }
+
+    res = requests.post(url, data=data)
+
+    print ("[+] Testing bot push command... ")
+    print (res.text + '\n')
+
+
 def test_dummyregister(ip):
     url = 'http://localhost:5000/register'
 
@@ -63,6 +77,8 @@ def main():
     test_dummyregister('127.0.0.3')
     test_dummyregister('127.0.0.4')
     test_dummyregister('127.0.0.5')
+
+    test_botpush('3')
 
     test_botlist()
 
