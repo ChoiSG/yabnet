@@ -97,3 +97,30 @@ References:
 TODO: Create commands database model which connects with bot_id foreign key primarykey from the Bot model 
 
 
+TODO:
+
+/hello
+/heartbeat
+    - Takes care of register + return command? 
+
+Or shoud I have separate endpoint for 
+    - register 
+    - command ? 
+
+Bot unique ID 
+    - bot's username + MAC address <-- base64 
+
+    - /bot/bot_unique_id/push
+    - /bot/bot_unique_id/task 
+
+
+Should a centralized register even exist? 
+
+Bot id should be uid? Not just incrementing integers? 
+
+Use my server for socket IP address experiment 
+    - Is it the router's IP address?
+    - Or the IP address from the starting machine? 
+
+Nonetheless, the uid (username + MAC address) is a good idea 
+    - 

