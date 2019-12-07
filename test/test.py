@@ -72,11 +72,13 @@ def test_botlist():
 def main():
     test_firstcontact()
 
-    test_dummyregister('127.0.0.1')
-    test_dummyregister('127.0.0.2')
-    test_dummyregister('127.0.0.3')
-    test_dummyregister('127.0.0.4')
-    test_dummyregister('127.0.0.5')
+    test_register()
+
+    #test_dummyregister('127.0.0.1')
+    #test_dummyregister('127.0.0.2')
+    #test_dummyregister('127.0.0.3')
+    #test_dummyregister('127.0.0.4')
+    #test_dummyregister('127.0.0.5')
 
     test_botpush('3')
 

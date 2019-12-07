@@ -187,8 +187,8 @@ def register():
 # TODO: Change this to POST, and add botkey for "authentication" <-- lmao 
 @app.route('/bot/<bot_ip>/task', methods=['GET'])
 def bottask():
+    pass
 
-    
 
 
 @app.route('/bot/<bot_id>/push', methods=['POST'])
