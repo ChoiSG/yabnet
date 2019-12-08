@@ -89,6 +89,16 @@ def test_task(ip):
     print("[+] Grabbing task for ip: " + ip + "...")
     print("[+] Command: ", res.text)
 
+def test_result(ip, result):
+    url = URL + '/bot/' + ip + '/result'
+
+    data = {'registerkey': registerkey, 'result': result}
+
+    res = requests.post(url, data=data)
+
+    print("[+] Uploading result to the server. ...")
+    print(res.text)
+
 def test_botlist():
     url = URL + '/bot/list'
 
@@ -107,11 +117,15 @@ def main():
     test_dummyregister('127.0.0.4')
     test_dummyregister('127.0.0.5')
 
-    test_botpush('3', '1st: cat /etc/passwd')
-    test_botpush('3', '2nd: ls -alh')
-    test_botpush('3', '3rd: echo "lmao"')
+    test_botpush('127.0.0.3', '1st: whoami')
+    test_botpush('127.0.0.3', '2nd: ls -alh')
+    test_botpush('127.0.0.3', '3rd: echo "lmao"')
 
     test_task('127.0.0.3')
+
+    test_result('127.0.0.3', 'root')
+
+    test_botpush('127.0.0.3', '2nd: ls -alh')
 
     test_botlist()
 

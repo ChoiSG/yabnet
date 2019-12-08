@@ -1,0 +1,24 @@
+Master CLI document 
+
+Library: https://github.com/python-cmd2/cmd2
+Doc: https://cmd2.readthedocs.io/en/latest/
+
+[ Command ] 
+
+<login> -h <host> -u <username> -p <password>
+	- Login to the remote server using username and password 
+
+<list> 
+	- Lists currently reported bot 
+
+	- =========== List of Bots ===========
+	- [id] ip: [IP] user: [USER] os: [OS] 
+
+<stage> -t <id> -c <cmd> 
+	- Stage a command to the target bot 
+	- A) Stage 
+	- B) Visit the results page <x> seconds later and display the result 
+	back to the user 
+
+<upload> -t <id> -f <local_file>
+	- 

@@ -72,6 +72,15 @@ Server API - Development (NO OPSEC)
         - Future work (OPSEC)
             - Make the bot to send the register key in order to view the task 
 
+    - /bot/<ip_address>/upload 
+        - [POST]
+        - (data) masterkey: <masterkey> & file: <base64_file>
+
+        - Master uploads the file in base64 format on to the page 
+        # This needs to be thought after and designed 
+        - Change the template, instead of using the database? idk 
+
+
 Client Implant
     - Persistence 
         - userland persistence --> Runs the implant every 20~40 seconds, randomly  
@@ -96,11 +105,12 @@ References:
 
 TODO (DONE): Create commands database model which connects with bot_id foreign key primarykey from the Bot model 
 
-TODO: Implement user registration for the master 
+TODO: Implement user authentication for the master 
 
 TODO: Create PoC Agent 
 
 TODO: Create PoC Master CLI 
+(https://github.com/python-cmd2/cmd2)
 
 ======================================================================================================
 
@@ -131,5 +141,3 @@ Use my server for socket IP address experiment
 
 Nonetheless, the uid (username + MAC address) is a good idea 
     - 
-
-How should 

