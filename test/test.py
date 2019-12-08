@@ -17,11 +17,11 @@ def test_firstcontact():
     print ("[+] Testing firstcontact... ")
     print (res.text + '\n')
 
-def test_botpush(bot_id):
+def test_botpush(bot_id, cmd):
     url = URL + '/bot/' + bot_id + '/push'
 
     masterkey = 'masterkey'
-    cmd = 'id'
+    cmd = cmd
 
     data = { 'masterkey': masterkey, 'cmd': cmd }
 
@@ -79,6 +79,16 @@ def test_dummyregister(ip):
     print("[+] Testing Register...")
     print(res.text)
 
+def test_task(ip):
+    url = URL + '/bot/' + ip + '/task'
+
+    data = {'registerkey': registerkey}
+
+    res = requests.post(url, data=data)
+
+    print("[+] Grabbing task for ip: " + ip + "...")
+    print("[+] Command: ", res.text)
+
 def test_botlist():
     url = URL + '/bot/list'
 
@@ -97,7 +107,11 @@ def main():
     test_dummyregister('127.0.0.4')
     test_dummyregister('127.0.0.5')
 
-    #test_botpush('3')
+    test_botpush('3', '1st: cat /etc/passwd')
+    test_botpush('3', '2nd: ls -alh')
+    test_botpush('3', '3rd: echo "lmao"')
+
+    test_task('127.0.0.3')
 
     test_botlist()
 
