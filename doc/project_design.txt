@@ -94,10 +94,17 @@ References:
 
 ======================================================================================================
 
-TODO: Create commands database model which connects with bot_id foreign key primarykey from the Bot model 
+TODO (DONE): Create commands database model which connects with bot_id foreign key primarykey from the Bot model 
 
+TODO: Implement user registration for the master 
 
-TODO:
+TODO: Create PoC Agent 
+
+TODO: Create PoC Master CLI 
+
+======================================================================================================
+
+Questions and Concerns 
 
 /hello
 /heartbeat
@@ -124,3 +131,5 @@ Use my server for socket IP address experiment
 
 Nonetheless, the uid (username + MAC address) is a good idea 
     - 
+
+How should 

