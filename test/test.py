@@ -125,7 +125,7 @@ def main():
 
     test_result('127.0.0.3', 'root')
 
-    test_botpush('127.0.0.3', '2nd: ls -alh')
+    #test_botpush('127.0.0.3', '2nd: ls -alh')
 
     test_botlist()
 

