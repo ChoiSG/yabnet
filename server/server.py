@@ -254,7 +254,10 @@ def botresult(bot_ip):
                 command = Command.query.filter_by(bot_id=query_bot.id).order_by(Command.id.desc()).first()
                 result = command.result
 
-                return result 
+                if result is None:
+                    return jsonify({'error': 'No command as of now.'})
+                else:
+                    return result 
 
             except Exception as e:
                 return jsonify({ 'error': str(e) })
