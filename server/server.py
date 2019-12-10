@@ -307,6 +307,7 @@ def commandlist():
     result = ''
 
     for command in commandlist:
+        print("[DEBUG] command ID = ", command.id)
         print("[DEBUG] result = ", command.result)
         print("[DEBUG] command's bot_id = ", command.bot_id)
         #result += command.get_info() + '\n'
