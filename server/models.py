@@ -1,3 +1,4 @@
+from flask import jsonify 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime  
 
@@ -6,8 +7,11 @@ db = SQLAlchemy()
 class Bot(db.Model):
     #__tablename__ = 'bots'
     id = db.Column('bot_id', db.Integer, primary_key=True)
-    ip = db.Column(db.String(128))
-    os = db.Column(db.String(128))
+    ip = db.Column(db.String(16))
+    os = db.Column(db.String(64))
+    user = db.Column(db.String(64))
+    registertime = db.Column(db.DateTime)
+    timestamp = db.Column(db.DateTime)
     # cmds is a "list" of "Command" Model. The cmds and the bot_id from Command Model 
     # shows the one-to-many foreign key relationship between two tables. 
     cmds = db.relationship('Command', backref='bot', lazy=True)
@@ -15,10 +19,14 @@ class Bot(db.Model):
     #TODO: Implement 'bot_unique_key' for authentication? 
     #unique_key = db.Column(db.String(128), default=<random_hash_created>)
 
-    def __init__(self, ip, os):
+    def __init__(self, ip, os, user):
         self.ip = ip 
         self.os = os
+        self.user = user 
         self.cmds = []
+        self.registertime = datetime.now()
+        self.timestamp = datetime.now()
+
 
     def get_id(self):
         return self.id
@@ -30,7 +38,7 @@ class Bot(db.Model):
         return self.os
 
     def get_info(self):
-        info = 'Bot[' + str(self.id) + '] IP: ' + self.ip + ' OS: ' + self.os
+        info = 'Bot[' + str(self.id) + '] IP: ' + self.ip + ' OS: ' + self.os + ' User: ' + self.user + ' Last seen: ' + str(self.timestamp) 
         return info
 
     def get_commands(self):
@@ -43,16 +51,21 @@ class Bot(db.Model):
 
         return result 
 
+    def set_timestamp(self, timestamp):
+        self.timestamp = timestamp
+        db.session.commit()
+
     def jsonbot(self):
         # TODO: Create a function which returns a jsonify version of the bot information 
-        pass 
+        return jsonify({'ip': self.ip, 'os': self.os, 'user': self.user, 'registertime': str(self.registertime), 'timestamp': str(self.timestamp) })
+        
 
 class Command(db.Model):
     id = db.Column('cmd_id', db.Integer, primary_key=True)
     cmd = db.Column(db.String(128))
     bot_id = db.Column(db.Integer, db.ForeignKey('bot.bot_id'))
     bot_ip = db.Column(db.String(128))
-    timestamp = db.Column(db.String(50)) 
+    timestamp = db.Column(db.DateTime) 
     latest = db.Column(db.Boolean, default=False)
     result = db.Column(db.String(500))
 
@@ -60,7 +73,7 @@ class Command(db.Model):
         self.cmd = cmd 
         self.bot_id = bot_id 
         self.bot_ip = bot_ip 
-        self.timestamp = str(datetime.now())
+        self.timestamp = datetime.now()
         self.latest = False
         self.result = ''
 
@@ -74,7 +87,9 @@ class Command(db.Model):
         self.result = result 
 
     def get_info(self):
-        info = '[Command Info] [' + self.timestamp + '] Bot_id: ' + str(self.bot_id) + ' Command Issued: ' + self.cmd
+        #result = "[Command Info]"
+        #result += self.cmd + ',' 
+        info = '[Command Info] [' + str(self.timestamp)  + ' Bot_ip: ' + self.bot_ip + ' Command_id: ' + str(self.id) + ' Command Issued: ' + self.cmd
         #result = self.result 
 
         return info 
