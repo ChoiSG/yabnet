@@ -227,9 +227,13 @@ ___  ___          _              _____                       _
         data = {'masterkey': MASTERKEY, 'cmd': cmd}
 
         res = requests.post(url, data=data)
+        response_data = res.json()
 
         output_broadcast = ansi.style('[+] Broadcast command has been staged.')
-        #self.poutput()
+        
+        if 'result' in response_data:
+            self.poutput(ansi.style(response_data['result'], fg='green', bold=True))
+        #self.poutput(data['result'])
 
 
     @cmd2.with_category(CUSTOM_CATEGORY)
