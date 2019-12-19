@@ -105,30 +105,21 @@ References:
 
 TODO (DONE): Create commands database model which connects with bot_id foreign key primarykey from the Bot model 
 
-TODO: Implement user authentication for the master 
+TODO (DONE): Create PoC Agent 
 
-TODO: Create PoC Agent 
-
-TODO: Create PoC Master CLI 
+TODO (DONE): Create PoC Master CLI 
 (https://github.com/python-cmd2/cmd2)
+
+TODO: Implement filter endpoint which will filter through the bot list and show 
+the targeting bot 
+
+TODO: Refactor the post request and argument/error checking based on the advice
+
+TODO: Implement user authentication for the master 
 
 ======================================================================================================
 
 Questions and Concerns 
-
-/hello
-/heartbeat
-    - Takes care of register + return command? 
-
-Or shoud I have separate endpoint for 
-    - register 
-    - command ? 
-
-Bot unique ID 
-    - bot's username + MAC address <-- base64 
-
-    - /bot/bot_unique_id/push
-    - /bot/bot_unique_id/task 
 
 
 Should a centralized register even exist? 
@@ -140,4 +131,3 @@ Use my server for socket IP address experiment
     - Or the IP address from the starting machine? 
 
 Nonetheless, the uid (username + MAC address) is a good idea 
-    - 

@@ -125,7 +125,9 @@ ___  ___          _              _____                       _
         self.poutput(output_username)
         self.poutput(output_password)
 
-
+    # TODO: Implement the find/filter flag 
+    list_parser = argparse.ArgumentParser()
+    list_parser.add_arugment('-f', '--find', type=str, help='Find specific agent by ip address')
     # TBH the result from the server should be in json format, and this CLI should 
     # parse the JSON and pretty print. 
     @cmd2.with_category(CUSTOM_CATEGORY)

