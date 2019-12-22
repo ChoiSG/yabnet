@@ -60,7 +60,7 @@ def firstcontact():
 
     global REGISTERKEY
     json_data = json.loads(res.text)
-    #print(res.text)
+    print(res.text)
     REGISTERKEY = json_data['registerkey']
     
 def register(ip, os, user):

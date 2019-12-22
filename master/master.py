@@ -7,6 +7,7 @@ import os
 import platform 
 import asyncio
 import threading 
+import json 
 from multiprocessing.pool import ThreadPool
 import time
 from subprocess import Popen, PIPE
@@ -15,7 +16,7 @@ import cmd2
 from cmd2 import ansi
 
 REGISTERKEY = "registerkey"
-MASTERKEY = "masterkey"
+#MASTERKEY = "masterkey"
 TIMER = '12'
 
 #URL = 'http://localhost:5000'
@@ -117,19 +118,36 @@ ___  ___          _              _____                       _
         global URL 
         URL = 'http://' + remoteserver + ":5000"
 
-        output_host = ansi.style('[DEBUG] ' + remoteserver, fg='red', bold=True)
-        output_username = ansi.style('[DEBUG] ' + username, fg='red', bold=True)
-        output_password = ansi.style('[DEBUG] ' + password, fg='red', bold=True)
+        auth_url = URL + '/auth'
+
+        output_status = ansi.style('[DEBUG] Logging in as master...', fg='blue', bold=True)
+        output_host = ansi.style('[DEBUG] ' + remoteserver, fg='blue', bold=True)
+        output_username = ansi.style('[DEBUG] ' + username, fg='blue', bold=True)
+        output_password = ansi.style('[DEBUG] ' + password, fg='blue', bold=True)
 
         self.poutput(output_host)
         self.poutput(output_username)
         self.poutput(output_password)
 
+        data = {'username': username, 'password': password}
+        res = requests.post(auth_url, data)
+        response_data = res.json()
+
+        if response_data['result'] == 'SUCCESS':
+            global MASTERKEY
+            MASTERKEY = response_data['masterkey']
+            output_success = ansi.style('[+] Successfully logged in.', fg='green', bold=True)
+            self.poutput(output_success)
+        else:
+            output_failed_server = ansi.style(res.text, fg='red', bold=True)
+            output_failed = ansi.style('[-] Authentication have failed.', fg='red', bold=True)
+            self.poutput(output_failed_server)
+            self.poutput(output_failed)
+
     # TODO: Implement the find/filter flag 
     list_parser = argparse.ArgumentParser()
     list_parser.add_argument('-f', '--find', type=str, help='Find specific agent by ip address')
-    # TBH the result from the server should be in json format, and this CLI should 
-    # parse the JSON and pretty print. 
+    # TBH the result from the server should be in json format, and this CLI should parse the JSON and pretty print. 
     @cmd2.with_category(CUSTOM_CATEGORY)
     #@cmd2.with_argparser()
     def do_list(self, arg):
@@ -142,7 +160,8 @@ ___  ___          _              _____                       _
 
 
         url = URL + '/bot/list'
-        res = requests.get(url)
+        data = {'masterkey': MASTERKEY}
+        res = requests.post(url, data=data)
 
         botlist = "==========================================================\n"
         botlist += res.text
@@ -170,7 +189,8 @@ ___  ___          _              _____                       _
 
 
         url = URL + '/bot/commands'
-        res = requests.get(url)
+        data = {'masterkey': MASTERKEY}
+        res = requests.post(url, data=data)
 
         commandlist = "==========================================================\n"
         commandlist += res.text

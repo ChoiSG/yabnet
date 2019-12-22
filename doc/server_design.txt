@@ -113,7 +113,7 @@ TODO (DONE): Create PoC Master CLI
 TODO: Implement filter endpoint which will filter through the bot list and show 
 the targeting bot 
 
-TODO: Refactor the post request and argument/error checking based on the advice
+TODO (DONE): Refactor the post request and argument/error checking based on the advice
 
 TODO: Implement user authentication for the master 
 

