@@ -349,7 +349,6 @@ def botlist():
     """
     Description: View and return all the bots in the server database
     TODO: Implement returning bot objects in json format 
-    TODO2: Implement filtering function - wait on this thought for now 
     """
 
     # Error checking 

