@@ -106,11 +106,18 @@ def test_botlist():
 
     print(res.text)
 
+def test_files():
+    url = URL + '/files'
+
+    res = requests.get(url)
+
+    print(res.text)
+
 def main():
     test_firstcontact()
 
     #test_register()
-
+    """
     test_dummyregister('127.0.0.1')
     test_dummyregister('127.0.0.2')
     test_dummyregister('127.0.0.3')
@@ -126,8 +133,10 @@ def main():
     test_result('127.0.0.3', 'root')
 
     #test_botpush('127.0.0.3', '2nd: ls -alh')
-
+    """
     test_botlist()
+
+    test_files
 
 if __name__ == '__main__':
     main() 

