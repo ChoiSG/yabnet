@@ -240,7 +240,7 @@ ___  ___          _              _____                       _
     download_parser = argparse.ArgumentParser()
     download_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address to download the command")
     download_parser.add_argument('-f', '--file', type=str, help="Target file to be downloaded to the bot")
-    download_parser.add_argument('-d', '--destination', type=str, help="Destination file path which the file will be downloaded to")
+    download_parser.add_argument('-d', '--destination', type=str, help="Destination file path which the file will be downloaded to. INCLUDE filename")
 
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(download_parser)
