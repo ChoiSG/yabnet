@@ -460,10 +460,11 @@ def upload_file():
     return jsonify({'success': '[DEBUG] File has been uploaded'})
 
 @app.route('/download/<filename>')
-def download_file():
+def download_file(filename):
     """
     Description: File download endpoint for the bots to visit and download specific files
     """
+    print("[DEBUG] filename = ", filename)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 

