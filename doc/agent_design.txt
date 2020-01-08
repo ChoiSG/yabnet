@@ -1,0 +1,30 @@
+Agent Design 
+
+[ Generator ]
+Brainstorming 
+
+Create an agent based on the configuration file 
+	- server ip address 
+	- server port 
+
+Use string template? 
+
+Or a yaml? 
+Or cmd? - Too much work, doesn't really need to tbh 
+
+
+[ Freezer ] 
+
+Create a freezed agent using pyinstaller 
+	- pyinstaller needs to be installed in the master server 
+	- 
+
+[ Agent ]
+
+It'll be nice if it has basic persistence based on the target machine's architecture (*Nix, Windows) 
+
+Basic agent 
+
+If it's created through go, that'll be dope 
+	- Might be a lighter 
+		- Given pyinstaller is very heavy 

