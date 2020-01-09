@@ -264,6 +264,13 @@ ___  ___          _              _____                       _
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(download_parser)
     def do_download(self, args):
+        # Error checking - Does the file exist?
+        my_file = pathlib.Path('/opt/yabnet/uploads/'+args.file)
+        if my_file.exists() is False:
+            output_error = ansi.style("[-] The file does not exist in /opt/yabnet/uploads !", fg='red', bold=True)
+            self.poutput(output_error)
+            # TODO: Stop this command - I need to read the docs for this 
+
         target_list = args.target.split(",")
 
         for target in target_list:

