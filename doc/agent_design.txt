@@ -17,7 +17,15 @@ Or cmd? - Too much work, doesn't really need to tbh
 
 Create a freezed agent using pyinstaller 
 	- pyinstaller needs to be installed in the master server 
-	- 
+
+[ Dropper ]
+
+A simple 5 line-ish dropper which connects back to the server and downloads the freezed client.
+	- Does require setting up a webserver for the client download  
+	- Is this better tho? 
+	- Isn't better just to scp to the target machine? 
+		- This is def. more simple 
+		- 
 
 [ Agent ]
 

