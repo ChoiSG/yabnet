@@ -191,6 +191,8 @@ def main():
     else:
         print("[-] Unidentifiable OS type")
 
+    host_os = socket.gethostname()
+
     attempt = 1
 
     ip = get_ip()

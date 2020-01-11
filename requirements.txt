@@ -6,3 +6,4 @@ Werkzeug==0.16.0
 paramiko==2.6.0
 cmd2==0.9.21
 PyInstaller==3.6
+staticx==0.8.1
