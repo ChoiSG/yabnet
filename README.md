@@ -23,7 +23,7 @@ chmod +x install.sh
 
 ## Operation 
 
-###Server setup
+### Server setup
 ```
 <Change MASTERNAME and MASTERPASSWORD in /server/server.py>
 <Default is admin:password>
@@ -31,7 +31,7 @@ chmod +x install.sh
 python3 ./server/server.py
 ```
 
-###Agent setup
+### Agent setup
 
 There are two options to setup agents. One is to create a static executable through freezing. Another way is to just simply create a `.py` file.
 
@@ -51,7 +51,7 @@ Example) python3 /opt/yabnet/agent/generator.py -i localhost -p 5000
 
 Transfer either `/opt/yabnet/agent/dist/agent_deploy_staticx` or `/opt/yabnet/agent/agent_deploy.py` to the target machine and run it
 
-###Master setup
+### Master setup
 
 After server and the agent is setup, launch the master console.
 Default credential for master is `admin:password`
