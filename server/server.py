@@ -31,15 +31,16 @@ UPLOAD_DIRECTORY="/opt/yabnet/uploads"
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 
-# Users - CHANGE ME for operation!! 
-MASTERNAME = 'u'
-MASTERPASSWORD = 'p'
+# Users - CHANGEME for operation!! 
+MASTERNAME = 'admin'                # CHANGEME !!! 
+MASTERPASSWORD = 'password'         # CHANGEME !!! 
 
 # MASTERNAME = 'soju'
-# MASTERPASSWORD = 'letredin'
+# MASTERPASSWORD = 'letchoiin'
 
 # TODO: Change the register key to change dynamically 
 # Keys - Hardcoded for now, going to make them random
+# Or implement environment variables here, and then use a configuration file
 FIRSTCONTACTKEY = 'firstcontactkey'
 REGISTERKEY = 'registerkey'
 MASTERKEY = 'masterkey'
