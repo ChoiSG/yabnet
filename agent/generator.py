@@ -79,13 +79,19 @@ def generate(template, newfile, serverip, port):
 def freeze():
     try: 
         print_green("[+] Using PyInstaller to Freeze agent_deploy. This will take some time...")
-        pyinstaller = subprocess.Popen('pyinstaller -F --clean "/opt/yabnet/agent/agent_deploy.py"', stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        pyinstaller = subprocess.Popen('cd /opt/yabnet/agent;pyinstaller -F "/opt/yabnet/agent/agent_deploy.py"', stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         print(pyinstaller.stderr.read().decode('utf-8'))
         print_green("[+] Pyinstaller was successful.")
+    except Exception as e: 
+        print_red("[-] " + str(e))
+        exit()
 
+    time.sleep(30)
+
+    try:
         print_green("[+] Using Staticx to create fully static executable...")
 
-        staticx = subprocess.Popen('staticx /opt/yabnet/agent/agent_deploy /opt/yabnet/agent/agent_deploy_staticx"', stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) 
+        staticx = subprocess.Popen('cd /opt/yabnet/agent/dist;staticx /opt/yabnet/agent/dist/agent_deploy /opt/yabnet/agent/dist/agent_deploy_staticx', stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) 
         print(staticx.stdout.read().decode('utf-8'))
         print_green("[+] Staticx was successful.")
         print_green("[+] Executable Path: /opt/yabnet/agent/dist/agent_deploy_staticx")

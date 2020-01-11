@@ -36,17 +36,18 @@ There are two options to setup agents. One is to create a static executable thro
 
 **1. Freezing - Executable**
 ```
-python3 ./agent/generator.py -i <server_ipaddress> -p <server_port> -f 
-Example) python3 ./agent/generator.py -i 192.168.204.128 -p 5000 -f 
+python3 /opt/yabnet/agent/generator.py -i <server_ipaddress> -p <server_port> -f 
+Example) python3 /opt/yabnet/agent/generator.py -i localhost -p 5000 -f 
 ```
 
 **2. Plain python file**
 ```
-python3 ./agent/generator.py -i <server_ipaddress> -p <server_port>
-Example) python3 ./agent/generator.py -i 192.168.204.128 -p 5000
+python3 /opt/yabnet/agent/generator.py -i <server_ipaddress> -p <server_port>
+Example) python3 /opt/yabnet/agent/generator.py -i localhost -p 5000
 ```
 
 **Transfer the agent file** 
+
 Transfer either `/opt/yabnet/agent/dist/agent_deploy_staticx` or `/opt/yabnet/agent/agent_deploy.py` to the target machine and run it
 
 ###Master setup
@@ -62,3 +63,5 @@ console# list
 `< All master console commands have help flag>`
 `Example) push -h`
 
+## Demo
+<insert youtubelink here>

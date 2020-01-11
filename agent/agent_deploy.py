@@ -21,7 +21,7 @@ TODO4: Create persistence on the script itself.
 
 # Debugging information  
 
-SERVERIP = '192.168.204.128'
+SERVERIP = 'localhost'
 PORT = 5000
 
 URL = 'http://'+SERVERIP+':'+str(PORT)
