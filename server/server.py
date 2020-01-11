@@ -17,6 +17,7 @@ Also takes are of master console's request/response.
 """
 
 # TODO: Put configuration into a separate init.py file? 
+# TODO: Implement real time bot checking --> right now, we are manually checking by master visitng /bot/list endpoint.
 # ========================== Initial Configuration =====================
 
 app = Flask(__name__)

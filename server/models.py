@@ -3,6 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime  
 
+"""
+Name: models.py 
+Description: Python sqlalchemy model class file which contains all database model information and functions 
+"""
+
 db = SQLAlchemy()
 
 class Bot(db.Model):
