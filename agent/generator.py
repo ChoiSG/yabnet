@@ -86,7 +86,7 @@ def freeze():
         print_red("[-] " + str(e))
         exit()
 
-    time.sleep(30)
+    time.sleep(5)
 
     try:
         print_green("[+] Using Staticx to create fully static executable...")

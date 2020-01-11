@@ -28,7 +28,7 @@ chmod +x install.sh
 <Change MASTERNAME and MASTERPASSWORD in /server/server.py>
 <Default is admin:password>
 
-python3 ./server/server.py
+python3 /opt/yabnet/server/server.py
 ```
 
 ### Agent setup
