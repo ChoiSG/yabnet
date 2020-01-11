@@ -9,8 +9,8 @@ Yabnet is a proof of concept tool which is only created for educational purposes
 
 ## Installation 
 
-**Yabnet requires python3.7++**
-**Due to laziness, yabnet currently requires to be installed in the /opt directory.**
+**Yabnet requires python3.7++
+Due to laziness, yabnet currently requires to be installed in the /opt directory.**
 
 ```
 cd /opt
