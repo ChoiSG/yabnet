@@ -13,8 +13,6 @@ Yet Another Botnet, PoC created for educational purposes only.
 
 ## Operation 
 
-Currently, yabnet is under construction. That means yabnet is meant to work on localhost environment.
-
 **Server setup**
 `python3 /server/server.py`
 
