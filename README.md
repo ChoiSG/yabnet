@@ -66,3 +66,6 @@ console# list
 
 ## Demo
 <insert youtubelink here>
+
+## Special Thanks 
+[NotoriousRebel](https://github.com/NotoriousRebel) - "Every red teamer should create their own C2"
