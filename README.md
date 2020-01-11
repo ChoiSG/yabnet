@@ -22,29 +22,40 @@ chmod +x install.sh
 
 ## Operation 
 
-**Server setup**
+###Server setup
 ```
-<Change MASTERNAME and MASTERPASSWORD in server.py>
+<Change MASTERNAME and MASTERPASSWORD in /server/server.py>
 <Default is admin:password>
 
-python3 /server/server.py
+python3 ./server/server.py
 ```
-**Agent setup**
 
+###Agent setup
+
+There are two options to setup agents. One is to create a static executable through freezing. Another way is to just simply create a `.py` file.
+
+**1. Freezing - Executable**
+```
+python3 ./agent/generator.py -i <server_ipaddress> -p <server_port> -f 
+Example) python3 ./agent/generator.py -i 192.168.204.128 -p 5000 -f 
+```
+
+**2. Plain python file**
 ```
 python3 ./agent/generator.py -i <server_ipaddress> -p <server_port>
-
 Example) python3 ./agent/generator.py -i 192.168.204.128 -p 5000
 ```
 
-`<Transfer ./agent/dist/agent_deploy_staticx to the target machine and run it>`
+**Transfer the agent file** 
+Transfer either `/opt/yabnet/agent/dist/agent_deploy_staticx` or `/opt/yabnet/agent/agent_deploy.py` to the target machine and run it
 
-**Master setup**
+###Master setup
 
 After server and the agent is setup, launch the master console.
+Default credential for master is `admin:password`
 ```
-python3 /master/master.py
-console# login -r localhost -u user -p pass
+python3 ./master/master.py
+console# login -r localhost -u <user> -p <password>
 console# list
 ``` 
 
