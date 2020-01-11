@@ -3,9 +3,13 @@ Yet Another Botnet, PoC created for educational purposes only.
 
 ## Installation 
 
-`git clone https://github.com/choisg/yabnet.git`
+**Due to lazyness, yabnet currently requires to be installed in the /opt directory.**
 
-`pip3 install -r requirements.txt`
+`cd /opt`
+`git clone https://github.com/choisg/yabnet.git`
+`cd /opt/yabnet`
+`chmod +x install.sh`
+`./install.sh`
 
 ## Operation 
 
@@ -15,20 +19,17 @@ Currently, yabnet is under construction. That means yabnet is meant to work on l
 `python3 /server/server.py`
 
 **Agent setup**
-`< Change the URL in the agent.py >`
+`python3 ./agent/generator.py -i <server_ipaddress> -p <server_port>`
+`Example) python3 ./agent/generator.py -i 192.168.204.128 -p 5000`
 
-`python3 agent.py` 
-
+`<Transfer ./agent/dist/agent_deploy_staticx to the target machine and run it>`
 
 **Master setup**
-After server and the agent is setup, launch the master console 
+After server and the agent is setup, launch the master console.
 `python3 /master/master.py`
-
 `console# login -r localhost -u user -p pass`
-
 `console# list` 
 
-`< All master console commands have help flag. 
-broadcast  commands  exit  list  login  push  quit
-ex) push -h `
+`< All master console commands have help flag>`
+`Example) push -h`
 
