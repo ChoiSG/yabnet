@@ -1,4 +1,4 @@
-agent/build/*
-agent/dist/*
-agent/__pycache/*
-agent/agent_deploy.spec
+/agent/build/*
+/agent/dist/*
+/agent/__pycache/*
+/agent/agent_deploy.spec
