@@ -476,16 +476,16 @@ def upload_file():
     
     return jsonify({'success': '[DEBUG] File has been uploaded'})
 
-@app.route('/download/<filename>', methods=['POST'])
+@app.route('/download/<filename>', methods=['GET','POST'])
 def download_file(filename):
     """
     Description: File download endpoint for the bots to visit and download specific files
     """
 
     # Error checking 
-    result = posterrorcheck(request, 'registerkey')
-    if result is not True:
-        return result
+    #result = posterrorcheck(request, 'registerkey')
+    #if result is not True:
+    #    return result
 
     print("[DEBUG] Bot downloading filename = ", filename)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)

