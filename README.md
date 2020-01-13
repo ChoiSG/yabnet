@@ -4,8 +4,18 @@ Yet Another Botnet, PoC created for educational purposes only.
 ## Disclaimer
 Yabnet is a proof of concept tool which was only created for educational purposes in classroom and cybersecurity related competitions. This tool is not created, nor is good enough for any real world usage. I do not condone use of this tool anything other than educational purposes. Using any of the files of yabnet in/against a system that you do not own is illegal, and you will get caught.
 
-## Under Construction
+## Under Construction - TODO 
+-----------
+
 **Yabnet is currently under construction.**
+- [ ] Reorganize `server.py` into init, api, models 
+- [ ] Dockerize server 
+- [ ] Create agent in `golang`, instead of using python 
+- [ ] Support windows for agent 
+- [ ] Clean up debugging codes in all files 
+- [ ] Finalize and structure all in-code comments 
+- [ ] Enhance README documentation and usage 
+
 
 ## Installation 
 
