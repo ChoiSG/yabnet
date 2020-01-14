@@ -359,6 +359,23 @@ def botresult(bot_ip):
     except Exception as e:
         return jsonify({ 'error': str(e) })
     
+@app.route('/refresh', methods=['GET'])
+def refresh():
+    try:
+        botlist = Bot.query.all()
+    except Exception as e:
+        return ''
+
+    try:
+        for bot in botlist:
+            if (datetime.now() - bot.timestamp).total_seconds() > 30:
+                db.session.delete(bot)
+        db.session.commit()
+    except Exception as e:
+        pass 
+
+    #print (botlist)
+    return '' 
 
 # TODO: Change the result to json, as this is an API endpoint 
 @app.route('/bot/list', methods=['POST'])
@@ -382,7 +399,9 @@ def botlist():
     for bot in botlist:
         if (datetime.now() - bot.timestamp).total_seconds() > 30:
             db.session.delete(bot)
-        db.session.commit()
+    db.session.commit()
+
+    #print(botlist)
 
     result = '' 
 

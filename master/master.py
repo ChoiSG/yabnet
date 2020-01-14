@@ -22,6 +22,14 @@ TIMER = '12'
 #URL = 'http://localhost:5000'
 # What if there is a thread in master which runs and hits server's refresh endpoint every 10 seconds 
 
+def refresh():
+    while True:
+        url = URL + '/refresh'
+        try:
+            res = requests.get(url)
+        except Exception as e:
+            pass 
+        time.sleep(10)
 
 async def get_result(bot_ip):
     url = URL + '/bot/' + bot_ip + '/result'
@@ -144,6 +152,9 @@ ___  ___          _              _____                       _
             output_failed = ansi.style('[-] Authentication have failed.', fg='red', bold=True)
             self.poutput(output_failed_server)
             self.poutput(output_failed)
+
+        refreshing = threading.Thread(target=refresh)
+        refreshing.start()
 
     # TODO: Implement the find/filter flag 
     list_parser = argparse.ArgumentParser()
@@ -331,5 +342,4 @@ ___  ___          _              _____                       _
 if __name__ == '__main__':
     import sys
     c = CmdLineApp()
-    print("hello word")
     sys.exit(c.cmdloop())

