@@ -2,6 +2,7 @@
 /agent/dist/*
 /agent/__pycache__/*
 /agent/agent_deploy.spec
+/agent/agent
 /agent/agent.go
 /agent/demo
 /server/yabnet.sqlite3
