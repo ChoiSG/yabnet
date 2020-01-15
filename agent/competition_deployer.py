@@ -1,5 +1,6 @@
 import paramiko
 import threading
+import argparse
 
 
 def generateTarget(common, cloud_common, teams, targets, cloud_targets):
@@ -43,7 +44,10 @@ def sshAttempt(ip,user,pwd):
 
 # Argparse comes here! 
 def parse():
-    pass 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-u','--user',type=str,help='Default competition username for login',required=True)
+    parser.add_argument('-p','--password',type=str,help='Default competition password for login',required=True)
+
 
 # TODO: Create a function which simply executes the user's command through ssh
 # This function will be used for re-executing the agent file during deployment. 
@@ -88,9 +92,6 @@ def main():
     targets = ['3','4','5','7']
     cloud_targets = ['50','51']
     
-
-    #print(generateTarget(common, cloud_common, teams, targets, cloud_targets))
-
     targets = generateTarget(common, cloud_common, teams, targets, cloud_targets)
 
     # SSH Login Sanity check 

