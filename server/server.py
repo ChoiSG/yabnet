@@ -32,11 +32,11 @@ if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 
 # Users - CHANGEME for operation!! 
-MASTERNAME = 'admin'                # CHANGEME !!! 
-MASTERPASSWORD = 'password'         # CHANGEME !!! 
+#MASTERNAME = 'admin'                # CHANGEME !!! 
+#MASTERPASSWORD = 'password'         # CHANGEME !!! 
 
-# MASTERNAME = 'soju'
-# MASTERPASSWORD = 'letchoiin'
+MASTERNAME = os.environ['USER']
+MASTERPASSWORD = os.environ['PASS']
 
 # TODO: Change the register key to change dynamically 
 # Keys - Hardcoded for now, going to make them random
@@ -511,7 +511,7 @@ def download_file(filename):
 
 
 
-# ========================= Flask App Starts ======================
+# ========================= Flask App Starts =========================
 
 
 def init_db():
@@ -526,5 +526,4 @@ def init_db():
 init_db()
 
 if __name__ == '__main__':
-    #app.run()
     app.run(host='0.0.0.0')

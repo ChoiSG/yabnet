@@ -147,14 +147,16 @@ ___  ___          _              _____                       _
             MASTERKEY = response_data['masterkey']
             output_success = ansi.style('[+] Successfully logged in.', fg='green', bold=True)
             self.poutput(output_success)
+            
+            # Upon succerssful login, begin the refresh thread to automatically refresh botlist in server. 
+            refreshing = threading.Thread(target=refresh)
+            refreshing.daemon = True
+            refreshing.start()
         else:
             output_failed_server = ansi.style(res.text, fg='red', bold=True)
             output_failed = ansi.style('[-] Authentication have failed.', fg='red', bold=True)
             self.poutput(output_failed_server)
             self.poutput(output_failed)
-
-        refreshing = threading.Thread(target=refresh)
-        refreshing.start()
 
     # TODO: Implement the find/filter flag 
     list_parser = argparse.ArgumentParser()
@@ -337,8 +339,6 @@ ___  ___          _              _____                       _
         return True
 
 
-
-# setup a thread here which hits the refresh endpoint every 10 seconds 
 if __name__ == '__main__':
     import sys
     c = CmdLineApp()

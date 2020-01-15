@@ -1,0 +1,14 @@
+FROM python:3.7-alpine
+
+# We copy just the requirements.txt first to leverage Docker cache
+COPY ./server_requirements.txt /app/server_requirements.txt
+
+WORKDIR /app
+
+RUN pip install -r server_requirements.txt
+
+COPY . /app
+
+ENTRYPOINT [ "python" ]
+
+CMD [ "server.py" ]

