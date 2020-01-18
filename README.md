@@ -49,6 +49,7 @@ Agent = Golang based static executable
 **Utility scripts** 
 
 `/yabnet/agent/generator.py` = Python script which creates agent golang file with specified server IP address and port number 
+
 `/yabnet/agent/competition_deployer.py` = Python script which helps to distribute and drops agent file to specific range of IP addresses via SSH
 
 ## Installation 
