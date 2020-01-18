@@ -85,7 +85,7 @@ def freeze():
     print_green("[+] Golang is installed.")
     print_green("[+] Using go agent to freeze and create static executable...")
     try:
-        subprocess.Popen('cd /opt/yabnet/agent;go build -o /opt/yabnet/agent/agent.go', stderr=subprocess.PIPE, shell=True)
+        subprocess.Popen('go build -o /opt/yabnet/agent/agent /opt/yabnet/agent/agent.go', stderr=subprocess.PIPE, shell=True)
         print_green("[+] Freezing was successful. Check /opt/yabnet/agent/agent")
     except Exception as e:
         print_red("[-] " + str(e))
