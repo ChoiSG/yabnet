@@ -1,6 +1,8 @@
 # Yabnet
 Yet Another Botnet, PoC created for educational purposes only.
-Yabnet is a HTTP based C2 server and agent that was designed, created, and intended to be used in an academic Attack/Defense competition environment.
+Yabnet is a HTTP based C2 server and agent that was designed, created, and intended to be used in an academic Attack/Defense competition environment. 
+
+Yabnet server is written in Python3++ Flask, deployed in docker. Yabnet agent is written in Golang.
 
 From setting up the server, freezing the agent, and distributing the agent to the target machine, yabnet aims to work out-of-the-box. That way, the red teamers could focus on more important stuffs, such as persistence. 
 
@@ -13,16 +15,16 @@ Yabnet is a proof of concept tool which was only created for educational purpose
 **Yabnet is currently under construction.**
 - [x] Dockerize server 
 - [x] Create agent in `golang`, instead of using python 
-- [ ] Support windows for agent 
+- [x] Support windows for agent 
 - [ ] Clean up debugging codes in all files 
 - [ ] Finalize and structure all in-code comments 
-- [ ] Enhance README documentation and usage 
+- [x] Enhance README documentation and usage 
 - [ ] Support communicating with PWNBOARD 
 
 
 ## Installation 
 
-**Yabnet requires python3.7++ and GOLANG**
+**Yabnet requires python3.7++, GOLANG, and docker**
 
 **Due to laziness, yabnet currently requires to be installed in the /opt directory.**
 
@@ -40,13 +42,14 @@ chmod +x install.sh
 
 **Server and Agent**
 
-`Server` = Python flask application inside Docker container 
-`Agent` = Golang based static executable 
+Server = Python flask application inside Docker container 
+
+Agent = Golang based static executable 
 
 **Utility scripts** 
 
-`/agent/generator.py` = Python script which creates agent golang file with specified server IP address and port number 
-`/agent/competition_deployer.py` = Python script which helps to distribute and drops agent file to specific range of IP addresses via SSH
+`/yabnet/agent/generator.py` = Python script which creates agent golang file with specified server IP address and port number 
+`/yabnet/agent/competition_deployer.py` = Python script which helps to distribute and drops agent file to specific range of IP addresses via SSH
 
 ## Installation 
 
@@ -56,16 +59,25 @@ cd /opt/yabnet/server
 docker build -t yabnet .
 docker run -e USER=<username> -e PASS=<password> -e MASTERKEY=<masterkey> -p 5000:5000 yabnet 
 
-(example docker run -e USER=admin -e PASS=password -e MASTERKEY=masterkey -p 5000:5000 yabnet )
+(Example: docker run -e USER=admin -e PASS=password -e MASTERKEY=masterkey -p 5000:5000 yabnet )
 ```
 
 ### Agent setup - Golang 
 
-Generate the static executable using the `generator.py`
-`python3 /opt/yabnet/agent/generator.py -i <serverip> -p <port> -f` 
+**Generating Agent through terminal**
 
-Verfiy the executable was created 
-`file /opt/yabnet/agent/agent`
+```
+# Create executable with generator script
+python3 /opt/yabnet/agent/generator.py -i <serverip> -p <port> -f
+# Verfiy the executable was created 
+file /opt/yabnet/agent/agent
+```
+
+**Generating Agent through master console**
+```
+python3 /opt/yabnet/master/master.py
+Yabnet>> generate -i <serverip> -p <serverport> -f 
+```
 
 **Transfer the agent file** 
 
@@ -75,17 +87,17 @@ Feel free to change the name of the executable.
 
 ### Master setup
 
-After server and the agent is setup, launch the master console.
 Use the credential that was passed through the `docker run` command for the server. 
 
 ```
-python3 ./master/master.py
-yabnet# login -r localhost -u <user> -p <password>
-yabnet# list
+python3 /opt/yabnet/master/master.py
+Yabnet>> login -r localhost -u <user> -p <password>
+Yabnet>> list
+
+# By the way, all master console commands have help flag.
+Yabnet>> push -h 
 ``` 
 
-`< All master console commands have help flag>`
-`Example) push -h`
 
 ## Operation 
 
