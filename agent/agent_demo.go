@@ -24,6 +24,15 @@ import (
 	"time"
 )
 
+// TODO: Think about following scenarios
+
+/* 	Server - Client : Successful
+Server goes down due to firewall, or any other reason
+client - Need to retry heartbeat infinitely
+client - heartbeat succeeds again. Need to re-register to the server.
+
+*/
+
 var registerkey string
 
 // Global Variable Declaration
