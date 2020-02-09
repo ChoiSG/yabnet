@@ -48,8 +48,6 @@ Agent = Golang based static executable
 
 **Utility scripts** 
 
-`/yabnet/agent/generator.py` = Python script which creates agent golang file with specified server IP address and port number 
-
 `/yabnet/agent/competition_deployer.py` = Python script which helps to distribute and drops agent file to specific range of IP addresses via SSH
 
 ## Installation 
@@ -58,31 +56,23 @@ Agent = Golang based static executable
 ```
 cd /opt/yabnet/server
 docker build -t yabnet .
-docker run -e USER=<username> -e PASS=<password> -e MASTERKEY=<masterkey> -p 5000:5000 yabnet 
+docker run -e USER=<username> -e PASS=<password> -e MASTERKEY=<masterkey> -p <ip>:5000:5000 yabnet 
 
-(Example: docker run -e USER=admin -e PASS=password -e MASTERKEY=masterkey -p 5000:5000 yabnet )
+(Example: docker run -e USER=admin -e PASS=password -e MASTERKEY=masterkey -p 192.168.204.153:5000:5000 yabnet )
 ```
 
 ### Agent setup - Golang 
-
-**Generating Agent through terminal**
-
-```
-# Create executable with generator script
-python3 /opt/yabnet/agent/generator.py -i <serverip> -p <port> -f
-# Verfiy the executable was created 
-file /opt/yabnet/agent/agent
-```
 
 **Generating Agent through master console**
 ```
 python3 /opt/yabnet/master/master.py
 Yabnet>> generate -i <serverip> -p <serverport> -f 
+Yabnet>> generate -i 192.168.204.153 -p 5000 -f -w   // -w is for Windows
 ```
 
 **Transfer the agent file** 
 
-Transfer `/opt/yabnet/agent/agent` to the target machine and run it.
+Transfer `/opt/yabnet/agent/agent` or `/opt/yabnet/agent/agent.exe` to the target machine and run it.
 
 Feel free to change the name of the executable. 
 

@@ -53,7 +53,6 @@ MASTERKEY = os.environ['MASTERKEY']
 
 # ================================= API ==================================
 
-# TODO: Implement this function 
 def posterrorcheck(requestobj, *args):
     """
     Description: Post check will see if the incoming post request from python flask 

