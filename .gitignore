@@ -6,3 +6,4 @@
 /agent/agent.go
 /agent/demo
 /server/yabnet.sqlite3
+/master/cmd2_history.dat

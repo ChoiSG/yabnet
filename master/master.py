@@ -26,7 +26,8 @@ def refresh():
             res = requests.get(url)
         except Exception as e:
             pass 
-        time.sleep(10)
+        
+        time.sleep(30)
 
 async def get_result(bot_ip):
     url = URL + '/bot/' + bot_ip + '/result'
@@ -110,7 +111,7 @@ ___  ___          _              _____                       _
 
         # TODO: Update the URL to have custom port numbers as well 
         global URL 
-        URL = 'http://' + remoteserver + ":5000"
+        URL = 'http://' + remoteserver
 
         auth_url = URL + '/auth'
 

