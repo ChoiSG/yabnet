@@ -104,7 +104,7 @@ class Command(db.Model):
     def get_info(self):
         #result = "[Command Info]"
         #result += self.cmd + ',' 
-        info = '[Command Info] [' + str(self.timestamp)  + ' Bot_ip: ' + self.bot_ip + ' Command_id: ' + str(self.id) + ' Command Issued: ' + self.cmd
+        info = '[Command Info] [' + str(self.timestamp)  + ' Bot_ip: ' + self.bot_ip + ' Command_id: ' + str(self.id) + ' Command Issued: ' + self.cmd + ' Command result: ' + self.result
         #result = self.result 
 
         return info 

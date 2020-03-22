@@ -194,7 +194,7 @@ ___  ___          _              _____                       _
             self.poutput(output_botlist)
 
     @cmd2.with_category(CUSTOM_CATEGORY)
-    def do_cleanup(self):
+    def do_cleanup(self, args):
         try:
             if URL is None:
                 self.poutput('URL is not set!')
