@@ -224,7 +224,7 @@ def botpush(bot_ip):
         - cmd = Command to push to the bot 
     """
 
-    # Error checking 
+    # Error checking  
     error = posterrorcheck(request, 'masterkey', 'cmd')
     if error is not True:
         return error 
