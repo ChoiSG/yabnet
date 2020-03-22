@@ -25,7 +25,7 @@ Also takes are of master console's request/response.
 # ============ Configuration can be change through config.py ===========
 
 app = Flask(__name__)
-app.config.from_object("config.DevConfig")
+app.config.from_object("config.ProdConfig")
 db.app = app
 db.init_app(app)
 

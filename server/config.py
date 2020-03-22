@@ -5,11 +5,11 @@ class Config(object):
 class ProdConfig(Config):
     DEBUG = False
     
-    HOST = "0.0.0.0"
-    PORT = "443"
-    MASTERNAME = "changeme"     # Change me for prod!
-    MASTERPASS = "changeme"     # Change me for prod!
-    MASTERKEY = "changeme"   # Change me for prod! 
+    HOST = "0.0.0.0"            # Change me if you want!
+    PORT = "443"                # Change me if you want! 
+    MASTERNAME = "admin"        # Change me, definitely!
+    MASTERPASS = "password"     # Change me, definitely!
+    MASTERKEY = "ChangeMeandCredentialsAsWell"   # Change me, definitely! 
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False 
 
