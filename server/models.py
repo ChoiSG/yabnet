@@ -65,7 +65,14 @@ class Bot(db.Model):
 
     def jsonbot(self):
         # TODO: Create a function which returns a jsonify version of the bot information 
-        return jsonify({'ip': self.ip, 'os': self.os, 'user': self.user, 'registertime': str(self.registertime), 'timestamp': str(self.timestamp) })
+        return {
+        'id': self.id, 
+        'ip': self.ip, 
+        'os': self.os, 
+        'user': self.user, 
+        'pid': self.pid, 
+        'lastseen': str(self.timestamp),
+        }
         
 
 class Command(db.Model):

