@@ -141,9 +141,12 @@ def freeze_python():
         exit()
 
 def generateNfreeze(ip, port, freezeBool, windowsBool):
-    # HARDCODING FTW (shouldn't do this) 
-    TEMPLATE = '/opt/yabnet/agent/agent.txt'
-    NEWFILE = '/opt/yabnet/agent/agent.go'
+    # HARDCODING FTW (shouldn't do this)
+    os.chdir('../')
+    TEMPLATE = os.getcwd() + '/agent/agent.txt'
+    NEWFILE = os.getcwd() + '/agent/agent.go'
+    #TEMPLATE = '/opt/yabnet/agent/agent.txt'
+    #NEWFILE = '/opt/yabnet/agent/agent.go'
 
     # Generate agent_deploy.py python file 
     serverip = ip

