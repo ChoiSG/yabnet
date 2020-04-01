@@ -401,9 +401,14 @@ ___  ___          _              _____                       _
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(upload_parser)
     def do_upload(self, args):
-        url = URL + '/uploads'
+        url = URL + '/upload'
 
-        pass 
+        userFile = args.file 
+
+        files = {'file': open(userFile,'rb')}
+        data = {'masterkey': MASTERKEY}
+
+        res = requests.post(url, files=files, data=data)
 
     """
     Command: generate 
