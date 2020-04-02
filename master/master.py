@@ -24,8 +24,8 @@ import generator
 
 # Timer to check the agent's result. The golang agent calls back randomly between 30~40 seconds, so we check 
 # around the 43 second mark. Very janky, very hardcoding indeed. Hopefully I find a better way around this... 
-TIMER = '45'
-TIMER_INT = 45
+TIMER = '55'
+TIMER_INT = 55
 
 def refresh():
     while True:
