@@ -3,7 +3,7 @@ class Config(object):
     TESTING = False
 
 class ProdConfig(Config):
-    DEBUG = False
+    DEBUG = True                # Change me to false if you want!
     
     HOST = "0.0.0.0"            # Change me if you want!
     PORT = "443"                # Change me if you want! 
