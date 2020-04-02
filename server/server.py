@@ -267,7 +267,7 @@ def botpush(target):
             query_bot = Bot.query.filter_by(id=bot_id).first()
 
         cmd = Command(cmd, query_bot.id, query_bot.ip)
-        #print(cmd)
+        print(cmd)
 
         # Actually push the command to the bot. If there is a previous command queued (making len(query_bot.cmds) >=1 ), ignore.
         try:
@@ -359,7 +359,7 @@ def botresult(bot_id):
         if 'registerkey' in data:
             if data['registerkey'] == REGISTERKEY:
                 result = data['result']
-                #print("[DEBUG] result = ", result)
+                print("[DEBUG] result = ", result)
 
                 query_bot = Bot.query.filter_by(id=bot_id).first()
                 command = Command.query.filter_by(bot_id=query_bot.id).order_by(Command.id.desc()).first()
