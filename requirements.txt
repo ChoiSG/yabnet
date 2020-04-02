@@ -1,4 +1,11 @@
-colorama==0.4.1
-requests==2.22.0
-paramiko==2.6.0
 cmd2==0.9.21
+paramiko==2.6.0
+Werkzeug==0.16.0
+Flask==1.1.1
+colorama==0.4.3
+Flask_SQLAlchemy==2.4.0
+requests==2.22.0
+pandas==0.25.3
+IPy==1.00
+keyboard==0.13.5
+PyInstaller==3.6
