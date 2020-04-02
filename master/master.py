@@ -50,18 +50,13 @@ def updatepwnboard(url):
         pwnboardURL = url
         yabnetEndpoint = URL + '/updatepwnboard'
         try:
-            # Sending this request makes the thread to sleep for 63 seconds. ????????????????????????
             data = {'masterkey': MASTERKEY, 'pwnboardURL': pwnboardURL}
-            requests.post(yabnetEndpoint,data=data)
-
-            #DEBUG
+            res = requests.post(yabnetEndpoint,data=data)
             #print(res.text)
         except Exception as e:
-            print("[-] Master.py = " + e)
+            print("[-] Updating pwnboard have failed = ", e)
 
-        # For some reason, this fucntion inside a thread sleeps 63 additional seconds. 
-        # So even though we sleep for 20 seconds, in total it sleeps for 83 seconds. WTF 
-        time.sleep(20)
+        time.sleep(60)
 
 def checkPushResult(url, masterkey, target,cmd):
     time.sleep(TIMER_INT)
