@@ -51,7 +51,7 @@ def windows(ip, user, pwd, command):
     print(ip)
     print(user)
     print(pwd)
-    
+
     """
     p = Protocol(
         endpoint="http://"+ip+":5985/wsman",
@@ -91,7 +91,7 @@ def exec(ssh, command, sudo, winrm):
     else:
         if sudo: 
             print_green("\n[IP] - " + ssh.get_transport().getpeername()[0] + " [Command] - " + command)
-            stdin, stdout, stderr = ssh.exec_command("sudo -S -p '' " + command, get_pty=True)
+            stdin, stdout, stderr = ssh.exec_command("sudo -S -p '' -- sh -c \"" + command + "\"", get_pty=True)
             stdin.write(PASSWORD + "\n")
             stdin.flush()
             return stdin, stdout, stderr 
