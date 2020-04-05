@@ -10,8 +10,8 @@ import threading
 import json
 import pathlib 
 import time
+import functools
 import pandas as pd 
-from keyboard import press
 from colorama import Fore,Style
 from subprocess import Popen, PIPE
 from multiprocessing.pool import ThreadPool
@@ -21,10 +21,10 @@ from cmd2 import ansi
 
 import generator
 
-# Timer to check the agent's result. The golang agent calls back randomly between 30~40 seconds, so we check 
-# around the 43 second mark. Very janky, very hardcoding indeed. Hopefully I find a better way around this... 
-TIMER = '45'
-TIMER_INT = 45
+# Timer to check the agent's result. The golang agent calls back randomly between 30~50 seconds, so we check 
+# around the 55 second mark. Very janky, very hardcoding indeed. Hopefully I find a better way around this... 
+TIMER = '55'
+TIMER_INT = 55
 
 def refresh():
     while True:
@@ -442,6 +442,7 @@ ___  ___          _              _____                       _
     """
     upload_parser = argparse.ArgumentParser()
     upload_parser.add_argument('-f', '--file', type=str, help='Directory path and filename to be uploaded to the server')
+    complete_upload = functools.partialmethod(cmd2.Cmd.path_complete, path_filter=os.path.isdir) # Autocompletion for filesystem 
     @cmd2.with_category(CUSTOM_CATEGORY)
     @cmd2.with_argparser(upload_parser)
     def do_upload(self, args):
@@ -453,6 +454,18 @@ ___  ___          _              _____                       _
         data = {'masterkey': MASTERKEY}
 
         res = requests.post(url, files=files, data=data)
+
+    """
+    Command: files
+    Description: View current files stored in the server's uploads directory 
+    """
+    @cmd2.with_category(CUSTOM_CATEGORY)
+    def do_files(self,args):
+        url = URL + '/files'
+
+        res = requests.get(url)
+
+        print_green(res.text)
 
     """
     Command: generate 

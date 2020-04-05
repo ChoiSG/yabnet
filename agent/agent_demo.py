@@ -1,3 +1,9 @@
+
+####################################################
+# THIS PYTHON AGENT FILE IS DEPRECATED.
+# USE THE GOLANG ONE INSTEAD 
+####################################################
+
 import requests 
 import time
 import socket

