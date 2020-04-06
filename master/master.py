@@ -281,7 +281,7 @@ ___  ___          _              _____                       _
             if args.hostname != None:
                 bots = ""
                 for bot in botlist:
-                    bots += str(bot['id']) + ","
+                    bots += ",".join(map(str, str(bot['id'])))
 
                 self.poutput(ansi.style("Ex) push -t " + bots + " -c whoami\n", fg='blue', bold=True))
 
