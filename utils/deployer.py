@@ -48,10 +48,6 @@ def generateTarget(common, cloud_common, teams, targets, cloud_targets):
     return total 
 
 def windows(ip, user, pwd, command):
-    print(ip)
-    print(user)
-    print(pwd)
-
     """
     p = Protocol(
         endpoint="http://"+ip+":5985/wsman",
@@ -69,11 +65,17 @@ def windows(ip, user, pwd, command):
     print(stderr)
     """
 
-    # The key was ntlm transport. 
-    session = winrm.Session(ip, auth=(user,pwd), transport='ntlm')
+    print_green("[IP] - " + str(ip) + " [Command] - " + command)
 
-    result = session.run_ps(command)
-    print(result.std_out.decode("utf-8"))
+    try:
+        # The key was ntlm transport. 
+        session = winrm.Session(ip, auth=(user,pwd), transport='ntlm')
+        result = session.run_ps(command)
+        print(result.std_out.decode("utf-8"))
+    
+    except Exception as e:
+        print_red("[-] Error: " + str(e))
+
 
 # This needs to be changed manually. Implementation will come soon(tm)
 def yabnetWindows():
@@ -231,7 +233,8 @@ def main():
         # Multiple Windows WinRM 
         if winrm:
             for host in open(hostFile).readlines():
-                windows(ip, user, pwd, command)
+                host = host.strip()
+                windows(host, user, pwd, command)
         
         # Multiple Linux SSH 
         else:
