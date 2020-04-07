@@ -48,10 +48,6 @@ def generateTarget(common, cloud_common, teams, targets, cloud_targets):
     return total 
 
 def windows(ip, user, pwd, command):
-    print(ip)
-    print(user)
-    print(pwd)
-
     """
     p = Protocol(
         endpoint="http://"+ip+":5985/wsman",
@@ -69,11 +65,17 @@ def windows(ip, user, pwd, command):
     print(stderr)
     """
 
-    # The key was ntlm transport. 
-    session = winrm.Session(ip, auth=(user,pwd), transport='ntlm')
+    print_green("[IP] - " + str(ip) + " [Command] - " + command)
 
-    result = session.run_ps(command)
-    print(result.std_out.decode("utf-8"))
+    try:
+        # The key was ntlm transport. 
+        session = winrm.Session(ip, auth=(user,pwd), transport='ntlm')
+        result = session.run_ps(command)
+        print(result.std_out.decode("utf-8"))
+    
+    except Exception as e:
+        print_red("[-] Error: " + str(e))
+
 
 # This needs to be changed manually. Implementation will come soon(tm)
 def yabnetWindows():
@@ -181,7 +183,7 @@ def parse():
     parser.add_argument('-f','--file', type=str,  dest='f', help='Location of the file to be dropped')
     parser.add_argument('-d','--destination', type=str, dest='d', help='Remote destination location to drop the file')
     parser.add_argument('-c','--command', type=str, dest='c', help='Command to be executed')
-    parser.add_argument('-iL','--ipfile',type=str, dest='iL', help='File name of lists of ip addresses')
+    parser.add_argument('-iL','--ipfile',type=str, dest='iL', help='File name which contains list of ip addresses')
     parser.add_argument('-g','--generate', action="store_true", dest='g', help='Generate a list of ip addresses for competition')
     parser.add_argument('-s','--sudo', action="store_true", dest='s', help='Run commands with sudo, if the user is sudoer')
     #parser.add_argument('--ssh')
@@ -231,7 +233,8 @@ def main():
         # Multiple Windows WinRM 
         if winrm:
             for host in open(hostFile).readlines():
-                windows(ip, user, pwd, command)
+                host = host.strip()
+                windows(host, user, pwd, command)
         
         # Multiple Linux SSH 
         else:

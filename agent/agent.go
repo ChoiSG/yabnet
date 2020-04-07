@@ -39,6 +39,7 @@ var (
 	PORT string
 )
 
+
 // FIRSTCONTACTKEY is
 var FIRSTCONTACTKEY string = "dudeOurRedteamalreadyhaslike30C2already-Friend"
 
