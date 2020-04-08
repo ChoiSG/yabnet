@@ -36,15 +36,23 @@ def refresh():
         
         time.sleep(TIMER_INT)
 
-def print_green(string):
-    print(Fore.GREEN + string + Style.RESET_ALL)
+def print_green(strings):
+    try:
+        print(Fore.BLUE + strings + Style.RESET_ALL)
+    except Exception as e:
+        print(Fore.BLUE + strings.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 
-def print_blue(string):
-    print(Fore.BLUE + string + Style.RESET_ALL)
+def print_blue(strings):
+    try:
+        print(Fore.BLUE + strings + Style.RESET_ALL)
+    except Exception as e:
+        print(Fore.BLUE + strings.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 
 def print_red(string):
-    print(Fore.RED + string + Style.RESET_ALL)
-
+    try:
+        print(Fore.BLUE + string + Style.RESET_ALL)
+    except Exception as e:
+        print(Fore.BLUE + string.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 def updatepwnboard(url):
     while True:
         pwnboardURL = url
@@ -65,12 +73,15 @@ def checkPushResult(url, masterkey, target,cmd):
 
     data = {'masterkey': key}
     res = requests.post(endpoint, data=data)
+    res = res.json()
+
+    #print(res)
     
     print_green("\n===========================================================================")
-    print_blue("[Target] " + str(target))
+    print_blue("[Bot_ID] - " + str(target) + " [Hostname] - " + res['bot_os'] + " [IP] - " + res['bot_ip'])
     print_blue("[Command] " + cmd)
     print_blue("[Result] \n")
-    print_green(res.text)
+    print_green(res['result'])
     print_green("===========================================================================\n")
 
     #self.poutput(output)
@@ -281,8 +292,8 @@ ___  ___          _              _____                       _
             if args.hostname != None:
                 bots = ""
                 for bot in botlist:
-                    bots += ",".join(map(str, str(bot['id'])))
-
+                    bots += str(bot['id']) + ","
+                bots = bots[:-1]
                 self.poutput(ansi.style("Ex) push -t " + bots + " -c whoami\n", fg='blue', bold=True))
 
     @cmd2.with_category(OPERATION_CATEGORY)
