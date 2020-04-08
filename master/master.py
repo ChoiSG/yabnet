@@ -39,8 +39,9 @@ def refresh():
 def print_green(string):
     print(Fore.GREEN + string + Style.RESET_ALL)
 
-def print_blue(string):
-    print(Fore.BLUE + string + Style.RESET_ALL)
+def print_blue(strings):
+    strings = strings.encode('utf-8')
+    print(Fore.BLUE + strings + Style.RESET_ALL)
 
 def print_red(string):
     print(Fore.RED + string + Style.RESET_ALL)
@@ -281,8 +282,8 @@ ___  ___          _              _____                       _
             if args.hostname != None:
                 bots = ""
                 for bot in botlist:
-                    bots += ",".join(map(str, str(bot['id'])))
-
+                    bots += str(bot['id']) + ","
+                bots = bots[:-1]
                 self.poutput(ansi.style("Ex) push -t " + bots + " -c whoami\n", fg='blue', bold=True))
 
     @cmd2.with_category(OPERATION_CATEGORY)

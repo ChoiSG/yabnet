@@ -17,11 +17,17 @@ from colorama import Fore,Style
 def print_green(string):
     print(Fore.GREEN + string + Style.RESET_ALL)
 
-def print_blue(string):
-    print(Fore.BLUE + string + Style.RESET_ALL)
+def print_blue(strings):
+    try:
+        print(Fore.BLUE + strings + Style.RESET_ALL)
+    except Exception as e:
+        print(Fore.BLUE + strings.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 
 def print_red(string):
-    print(Fore.RED + string + Style.RESET_ALL)
+    try:
+        print(Fore.BLUE + string + Style.RESET_ALL)
+    except Exception as e:
+        print(Fore.BLUE + string.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 
 
 def generateTarget(common, cloud_common, teams, targets, cloud_targets):
@@ -72,6 +78,7 @@ def windows(ip, user, pwd, command):
         session = winrm.Session(ip, auth=(user,pwd), transport='ntlm')
         result = session.run_ps(command)
         print(result.std_out.decode("utf-8"))
+        #print(result.std_err.decode("utf-8"))
     
     except Exception as e:
         print_red("[-] Error: " + str(e))
@@ -91,17 +98,22 @@ def exec(ssh, command, sudo, winrm):
     
     # Using ssh 
     else:
-        if sudo: 
-            print_green("\n[IP] - " + ssh.get_transport().getpeername()[0] + " [Command] - " + command)
-            stdin, stdout, stderr = ssh.exec_command("sudo -S -p '' -- sh -c \"" + command + "\"", get_pty=True)
-            stdin.write(PASSWORD + "\n")
-            stdin.flush()
-            return stdin, stdout, stderr 
+        try:
+            if sudo: 
+                print_green("\n[IP] - " + ssh.get_transport().getpeername()[0] + " [Command] - " + command)
+                stdin, stdout, stderr = ssh.exec_command("sudo -S -p '' -- sh -c \"" + command + "\"", get_pty=True)
+                stdin.write(PASSWORD + "\n")
+                stdin.flush()
+                return stdin, stdout, stderr 
 
-        else:
-            print_green("\n[IP] - " + ssh.get_transport().getpeername()[0] + " [Command] - " + command)
-            stdin, stdout, stderr = ssh.exec_command(command, get_pty=True)
-            return stdin, stdout, stderr 
+            else:
+                print_green("\n[IP] - " + ssh.get_transport().getpeername()[0] + " [Command] - " + command)
+                stdin, stdout, stderr = ssh.exec_command(command, get_pty=True)
+                return stdin, stdout, stderr 
+
+        except Exception as e:
+            print_red(str(e))
+            return '','','' 
 
 # Actually drop the payload, change the file permission, and execute it 
 def drop(ssh, localFile, remoteLocation):    
@@ -244,7 +256,7 @@ def main():
             if args.c != None:
                 for ssh in sshList:
                     stdin, stdout, stderr = exec(ssh, command, sudo, winrm)
-                    print_blue(parseStdout(stdout))
+                    print_blue(parseStdout(stdout).decode("utf-8"))
             
             if args.f != None and args.d != None:
                 for ssh in sshList:
