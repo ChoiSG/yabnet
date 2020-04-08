@@ -14,14 +14,23 @@ from colorama import Fore,Style
     how to use paramiko, hey I learned something, right? Gotta reinvent all the wheels! 
 """
 
-def print_green(string):
-    print(Fore.GREEN + string + Style.RESET_ALL)
+def print_green(strings):
+    try:
+        print(Fore.BLUE + strings + Style.RESET_ALL)
+    except Exception as e:
+        print(Fore.BLUE + strings.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 
-def print_blue(string):
-    print(Fore.BLUE + string + Style.RESET_ALL)
+def print_blue(strings):
+    try:
+        print(Fore.BLUE + strings + Style.RESET_ALL)
+    except Exception as e:
+        print(Fore.BLUE + strings.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 
 def print_red(string):
-    print(Fore.RED + string + Style.RESET_ALL)
+    try:
+        print(Fore.BLUE + string + Style.RESET_ALL)
+    except Exception as e:
+        print(Fore.BLUE + string.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 
 
 def generateTarget(common, cloud_common, teams, targets, cloud_targets):
@@ -91,17 +100,21 @@ def exec(ssh, command, sudo, winrm):
     
     # Using ssh 
     else:
-        if sudo: 
-            print_green("\n[IP] - " + ssh.get_transport().getpeername()[0] + " [Command] - " + command)
-            stdin, stdout, stderr = ssh.exec_command("sudo -S -p '' -- sh -c \"" + command + "\"", get_pty=True)
-            stdin.write(PASSWORD + "\n")
-            stdin.flush()
-            return stdin, stdout, stderr 
+        try:
+            if sudo: 
+                print_green("\n[IP] - " + ssh.get_transport().getpeername()[0] + " [Command] - " + command)
+                stdin, stdout, stderr = ssh.exec_command("sudo -S -p '' -- sh -c \"" + command + "\"", get_pty=True)
+                stdin.write(PASSWORD + "\n")
+                stdin.flush()
+                return stdin, stdout, stderr 
 
-        else:
-            print_green("\n[IP] - " + ssh.get_transport().getpeername()[0] + " [Command] - " + command)
-            stdin, stdout, stderr = ssh.exec_command(command, get_pty=True)
-            return stdin, stdout, stderr 
+            else:
+                print_green("\n[IP] - " + ssh.get_transport().getpeername()[0] + " [Command] - " + command)
+                stdin, stdout, stderr = ssh.exec_command(command, get_pty=True)
+                return stdin, stdout, stderr 
+                
+        except Exception as e:
+            return '','',''
 
 # Actually drop the payload, change the file permission, and execute it 
 def drop(ssh, localFile, remoteLocation):    

