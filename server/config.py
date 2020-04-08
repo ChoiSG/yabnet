@@ -13,7 +13,17 @@ class ProdConfig(Config):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False 
 
-    SQLALCHEMY_DATABASE_URI = "sqlite:///yabnet.sqlite3"
+    #SQLALCHEMY_DATABASE_URI = "sqlite:///yabnet.sqlite3"
+    """
+    POSTGRES = {
+        'user': 'postgres',
+        'pw': 'password',
+        'db': 'my_database',
+        'host': 'localhost',
+        'port': '5432'
+    }
+    """
+    SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://test:test@db/test"
     UPLOAD_FOLDER = "./uploads"
 
     # If this is changed, the bot's configuration needs to be changed as well 

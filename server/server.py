@@ -4,6 +4,7 @@ import json
 import random
 import string
 import requests
+import psycopg2
 from IPy import IP
 
 from flask import Flask, url_for, request, redirect, jsonify, render_template, session, send_from_directory, Response 
