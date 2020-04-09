@@ -6,5 +6,7 @@
 /agent/agent.exe
 /agent/demo
 /server/uploads/*
+/server/postgres-data/*
+/server/migrations/*
 /server/yabnet.sqlite3
 /master/cmd2_history.dat

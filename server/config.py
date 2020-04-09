@@ -13,17 +13,20 @@ class ProdConfig(Config):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False 
 
-    SQLALCHEMY_DATABASE_URI = "sqlite:///yabnet.sqlite3"
+    SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://test:test@db/test"
     UPLOAD_FOLDER = "./uploads"
 
     # If this is changed, the bot's configuration needs to be changed as well 
     FIRSTCONTACTKEY = "dudeOurRedteamalreadyhaslike30C2already-Friend"
 
+    # This list should change every competition
+    PRIVILEGED_USERS = ['root','Administrator','SYSTEM','captain','firstmate','stowaway']
+
 class DevConfig(Config):
     DEBUG = True
     
     HOST = "0.0.0.0"
-    PORT = "4444"
+    PORT = "443"
     MASTERNAME = "admin"
     MASTERPASS = "password"
     MASTERKEY = "testomaster"
@@ -35,3 +38,6 @@ class DevConfig(Config):
 
     # If this is changed, the bot's configuration needs to be changed as well 
     FIRSTCONTACTKEY = "dudeOurRedteamalreadyhaslike30C2already-Friend"
+
+    # This list should change every competition
+    PRIVILEGED_USERS = ['root','Administrator','SYSTEM','captain','firstmate','stowaway']
