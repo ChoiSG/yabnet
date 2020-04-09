@@ -1,113 +1,114 @@
 import re 
+import sys 
+import time
+import json
 
-def generatehosts(internal, cloud, teams, internalBox, cloudBox, hostname):
-    internalTarget = []
-    cloudTarget = []
+class Box:
+    name = ""
+    ip = ""
+    teamNum = ""
+    os = ""
+    version = "" 
 
-    hostdict = {host: list([]) for host in hostname}
+    def __init__(self, name, ip, teamNum, os):
+        self.name = name 
+        self.ip = ip
+        self.teamNum = teamNum
+        self.os = os 
 
-    # Generating IP addresses for internal boxes... 
-    for teamNum in teams:
-        for internalip in internalBox:
-            ip = internal.replace('x',teamNum)
-            ip = ip.replace('y',internalip)
-            
-            internalTarget.append(ip)
-
-    # Generating IP addresses for cloud boxes... 
-    for teamNum in teams:
-        for boxip in cloudBox:
-            ip = cloud.replace('x', teamNum)
-            ip = ip.replace('y', boxip)
-
-            cloudTarget.append(ip)
-
-    return internalTarget,cloudTarget,hostdict
-
-
-def findHost(ip, regexString):
-    check = re.compile(regexString)
-    result = check.search(ip)
-
-    if result:
-        return True
-    else:
-        return False 
+    def jsonBox(self):
+        return {
+            'name': self.name,
+            'ip': self.ip,
+            'teamNum': self.teamNum,
+            'os': self.os 
+        } 
 
 
-# smh on this algorithm but I had two hours to fix all my stuff 
-def categorize(hostdict, internalTarget, cloudTarget):
-    for ip in internalTarget:
-        if findHost(ip, "\d{1,3}\.\d{1,3}\.1\.2"):
-            hostdict['annebonny'].append(ip)
-        elif findHost(ip, "\d{1,3}\.\d{1,3}\.1\.3"):
-            hostdict['williamkidd'].append(ip)
-        elif findHost(ip, "\d{1,3}\.\d{1,3}\.1\.4"):
-            hostdict['calicojack'].append(ip)
-        elif findHost(ip, "\d{1,3}\.\d{1,3}\.1\.5"):
-            hostdict['maryread'].append(ip)
-        elif findHost(ip, "\d{1,3}\.\d{1,3}\.1\.6"):
-            hostdict['edwardteach'].append(ip)
-        elif findHost(ip, "\d{1,3}\.\d{1,3}\.1\.7"):
-            hostdict['captaincrapo'].append(ip)
-        elif findHost(ip, "\d{1,3}\.\d{1,3}\.1\.8"):
-            hostdict['canoot'].append(ip)
+def build(internalorcloud, teams, boxDict, os):
+
+    boxList = []
+
+    for team in teams:
+        for win in boxDict:
+            ip = internalorcloud.replace('x', team)
+            ip = ip.replace('y', win['ip'])
+            box = Box(win['name'], ip, team, os)
+            boxList.append(box)
+
+    return boxList
+
+def parseBoxesJson(filename):
+    teams = []
+    internal_win = []
+    internal_lin = []
+    cloud_win = []
+    cloud_lin = []
+    misc = [] 
+
+    with open(filename) as fd:
+        data = json.load(fd)
+        teams = data['teams']
+        internal_win = data['internal_win']
+        internal_lin = data['internal_lin']
+        cloud_win = data['cloud_win']
+        cloud_lin = data['cloud_lin']
+
+    fd.close()
+    
+    return teams, internal_win, internal_lin, cloud_win, cloud_lin, misc 
+
+def writeHostFile(totalBoxList, teams, os):
+    
+    for team in teams:
+        ip = ""
+
+        for box in totalBoxList:
+            if box.teamNum == team and box.os == os:
+                ip += box.ip
+                ip += "\n"
         
-    for ip in cloudTarget:
-        if findHost(ip, "\d{1,3}\.\d{1,3}\.2\.2"):
-            hostdict['nemo'].append(ip)
-        elif findHost(ip, "\d{1,3}\.\d{1,3}\.2\.3"):
-            hostdict['gunner'].append(ip)
-        elif findHost(ip, "\d{1,3}\.\d{1,3}\.2\.4"):
-            hostdict['laurellabonaire'].append(ip)
-        elif findHost(ip, "\d{1,3}\.\d{1,3}\.2\.5"):
-            hostdict['lockelamora'].append(ip)
-        elif findHost(ip, "\d{1,3}\.\d{1,3}\.2\.6"):
-            hostdict['hook'].append(ip)
+        filename = "team" + team + "_" + os + ".txt"
+        with open(filename, 'w') as fd:
+            fd.write(ip)
+        fd.close 
+        
 
-    return hostdict
 
 def main():
+    if len(sys.argv) < 2:
+        print("USAGE: {} <boxes.json>".format(sys.argv[0]))
+        quit(1)
+
     internal = "10.x.1.y"
     cloud = "10.x.2.y"
 
-    teams = ['1','2','3','4','5','6','7','8','9','10']
-    internalBox = ['2','3','4','5','6','7','8']
-    cloudBox = ['2','3','4','5','6']
+    # Build box templates
+    teams, internal_win, internal_lin, cloud_win, cloud_lin, misc = parseBoxesJson(sys.argv[1])
 
-    hostname = ['annebonny', 'williamkidd', 'calicojack', 'maryread', 'edwardteach', 'captaincrapo', 'canoot', 'nemo', 'gunner', 'laurellabonaire','lockelamora','hook']
+    # Actually build boxes with names, ip, teamNum, os 
+    internalWinBox = build(internal,teams,internal_win,"windows")
+    internalLinBox = build(internal,teams,internal_lin,"linux")
+    cloudWinBox = build(cloud,teams,cloud_win,"windows")
+    cloudLinBox = build(cloud,teams,cloud_lin,"linux")
 
-    internalTarget = []
-    cloudTarget = []
-    hostdict = {} 
+    # Gain a list(dictionary) with all of the boxes for the competition 
+    totalBoxList = internalWinBox + internalLinBox + cloudWinBox + cloudLinBox
 
-    internalTarget,cloudTarget,hostdict = generatehosts(internal, cloud, teams, internalBox, cloudBox, hostname)
+    for box in totalBoxList:
+        print(box.jsonBox())
 
-    hostdict = categorize(hostdict, internalTarget, cloudTarget)
+    print("\n\n")
+    print("This will create hostfile for each team's windows and linux")
+    print("~20 .txt files will be created.")
+    print("CTRL+C to exit.\n\n")
 
-    for host in hostname:
-        print("========== [ " + host + " ] ==========")
-        for ip in hostdict[host]:
-            print(ip)
-        print("\n")
+    time.sleep(10)
+    writeHostFile(totalBoxList, teams, "windows")
+    writeHostFile(totalBoxList, teams, "linux")
 
-    for host in hostname:
-        print(host + " = ", hostdict[host])
-
-    """
-    # Use this if needed
-    for ip in internalTarget:
-        print(ip)
-    for ip in cloudTarget:
-        print(ip)
-    print(internalTarget)
-    print(cloudTarget)
-    print(hostname)
-    """
-
-    print(internalTarget)
-    print(cloudTarget)
-    print(hostname)
+    print("DONE! All host files per team + per OS have been created.")
+    print("===========================================")
 
 if __name__ == '__main__':
     main()

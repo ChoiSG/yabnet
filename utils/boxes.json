@@ -1,0 +1,86 @@
+{
+    "teams": ["2","3","4","5","6","7","8","9","10"],
+    "internalBox": ["2","3","4","5","6","7","8"],
+    "cloudBox": ["2","3","4","5","6"],
+
+    "internal_win": [
+        {
+            "name": "annebonny",
+            "ip": "2",
+            "os": "windows"
+        },
+        {
+            "name": "maryread",
+            "ip": "5",
+            "os": "windows"
+        },
+        {
+            "name": "edwardteach",
+            "ip": "6",
+            "os": "windows"
+        },
+        {
+            "name": "captaincrapo",
+            "ip": "7",
+            "os": "windows"
+        }
+    ],
+
+
+    "internal_lin": [
+        {
+            "name": "williamkidd",
+            "ip": "3",
+            "os": "windows"
+        },
+        {
+            "name": "calicojack",
+            "ip": "4",
+            "os": "windows"
+        },
+        {
+            "name": "canoot",
+            "ip": "8",
+            "os": "windows"
+        }
+    ],
+
+    "cloud_win": [
+        {
+            "name": "lockelamora",
+            "ip": "5",
+            "os": "windows"
+        }
+    ],
+
+    "cloud_lin": [
+        {
+            "name": "nemo",
+            "ip": "2",
+            "os": "windows"
+        },
+        {
+            "name": "gunner",
+            "ip": "3",
+            "os": "windows"
+        },
+        {
+            "name": "laurellabonaire",
+            "ip": "4",
+            "os": "windows"
+        }
+    ],
+
+    "misc": [
+        {
+            "name": "hook",
+            "ip": "6",
+            "os": "freebsd"
+        },
+        {
+            "name": "pfsense",
+            "ip": "254",
+            "os": "router"
+        }
+    ]
+}

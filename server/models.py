@@ -7,6 +7,8 @@ from datetime import datetime
 """
 Name: models.py 
 Description: Python sqlalchemy model class file which contains all database model information and functions 
+
+Currently models.py contains Bot, Command, User model. 
 """
 
 db = SQLAlchemy()
@@ -46,6 +48,7 @@ class Bot(db.Model):
     def get_os(self):
         return self.os
 
+    # DEPRECATED. Use jsonbot instead. 
     def get_info(self):
         info = 'Bot[' + str(self.id) + '] IP: ' + self.ip + ' Hostname: ' + self.os + ' User: ' + self.user + ' PID: ' + self.pid + ' Last seen: ' + str(self.timestamp) 
         return info
@@ -65,7 +68,6 @@ class Bot(db.Model):
         db.session.commit()
 
     def jsonbot(self):
-        # TODO: Create a function which returns a jsonify version of the bot information 
         return {
         'id': self.id, 
         'ip': self.ip, 
@@ -115,14 +117,11 @@ class Command(db.Model):
     def set_result(self, result):
         self.result = result 
 
+    # DEPRECATED. Use jsoncommand instead 
     def get_info(self):
-        #result = "[Command Info]"
-        #result += self.cmd + ',' 
         info = '[Command Info] [' + str(self.timestamp)  + ' Bot_ip: ' + self.bot_ip + ' Command_id: ' + str(self.id) + ' Command Issued: ' + self.cmd + ' Command result: ' + self.result
-        #result = self.result 
 
         return info 
-        #return '\n'.join([info, result])
 
 class User(db.Model):
     id = db.Column('user_id', db.Integer, primary_key=True)

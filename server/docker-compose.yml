@@ -1,6 +1,11 @@
+# Docker-compose file for yabnet 
+# Currently has yabnet flask server and postgresql for db 
+
 version: '3.6'
 
 services:
+
+  # Yabnet flask server 
   api:
     build: .
     depends_on:
@@ -17,6 +22,7 @@ services:
       - ./migrations:/usr/src/app/migrations
     restart: always
 
+  # Postgresql for yabnet server, only opened in localhost 
   db:
     environment:
       POSTGRES_USER: test

