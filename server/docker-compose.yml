@@ -1,0 +1,38 @@
+# Docker-compose file for yabnet 
+# Currently has yabnet flask server and postgresql for db 
+
+version: '3.6'
+
+services:
+
+  # Yabnet flask server 
+  api:
+    build: .
+    depends_on:
+      - db
+    environment:
+      STAGE: test
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://test:test@db/test
+    networks:
+      - default
+    ports:
+      - 443:443
+    volumes:
+      - .:/usr/src/app/app
+      - ./migrations:/usr/src/app/migrations
+    restart: always
+
+  # Postgresql for yabnet server, only opened in localhost 
+  db:
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    image: postgres:latest
+    networks:
+      - default
+    ports:
+      - 5432:5432
+    restart: always
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
