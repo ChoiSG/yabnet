@@ -743,12 +743,18 @@ def updatepwnboard():
     except Exception as e:
         return jsonify({'error': "[-] " + str(e)})
 
+    # TODO: Sending single requests for now. This is scuffed, need updated. 
     ips = []
     for bot in botlist:
-
         if bot.ip not in ips:
             ips.append(bot.ip)
+            postData = {'ip': bot.ip, 'type': 'Yabnet'}
+            try:
+                requests.post(pwnboardURL, json=postData, timeout=1)
+            except Exception as e:
+                continue
 
+    """
     print("\n[DEBUG] Updating pwnboard... ", ', '.join(ips), "\n")
 
     postData = {'ips': ips, 'type': 'Yabnet'}
@@ -762,7 +768,7 @@ def updatepwnboard():
         return jsonify({'success': "[+] Updated pwnboard. IPs: " + ', '.join(ips)})
         pass
         #return jsonify({'error': "[-] Updating pwnboard failed: " + str(e)})
-
+    
     return '' 
 
 

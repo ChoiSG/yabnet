@@ -83,12 +83,12 @@ def updatepwnboard(url):
         yabnetEndpoint = URL + '/updatepwnboard'
         try:
             data = {'masterkey': MASTERKEY, 'pwnboardURL': pwnboardURL}
-            res = requests.post(yabnetEndpoint,data=data)
+            res = requests.post(yabnetEndpoint,data=data,verify=False)
             #print(res.text)
         except Exception as e:
             print("[-] Updating pwnboard have failed = ", e)
 
-        time.sleep(60)
+        time.sleep(TIMER_INT*2)
 
 def checkPushResult(url, masterkey, target,cmd):
     """
