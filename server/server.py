@@ -750,7 +750,7 @@ def updatepwnboard():
             ips.append(bot.ip)
             postData = {'ip': bot.ip, 'type': 'Yabnet'}
             try:
-                requests.post(pwnboardURL, json=postData, timeout=1)
+                requests.post(pwnboardURL, json=postData, timeout=3)
             except Exception as e:
                 continue
 
@@ -770,6 +770,7 @@ def updatepwnboard():
         #return jsonify({'error': "[-] Updating pwnboard failed: " + str(e)})
     
     return '' 
+    """
 
 
 # ========================= Flask App Starts =========================

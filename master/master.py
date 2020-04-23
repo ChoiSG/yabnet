@@ -56,9 +56,9 @@ def refresh():
 
 def print_green(strings):
     try:
-        print(Fore.BLUE + strings + Style.RESET_ALL)
+        print(Fore.GREEN + strings + Style.RESET_ALL)
     except Exception as e:
-        print(Fore.BLUE + strings.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
+        print(Fore.GREEN + strings.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 
 def print_blue(strings):
     try:
@@ -68,9 +68,9 @@ def print_blue(strings):
 
 def print_red(string):
     try:
-        print(Fore.BLUE + string + Style.RESET_ALL)
+        print(Fore.RED + string + Style.RESET_ALL)
     except Exception as e:
-        print(Fore.BLUE + string.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
+        print(Fore.RED + string.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 
 
 def updatepwnboard(url):
@@ -109,7 +109,7 @@ def checkPushResult(url, masterkey, target,cmd):
     print_green("\n===========================================================================")
     print_blue("[Bot_ID] - " + str(target) + " [Hostname] - " + res['bot_os'] + " [IP] - " + res['bot_ip'])
     print_blue("[Command] " + cmd)
-    print_blue("[Result] \n")
+    print_blue("\n[Result]\n")
     print_green(res['result'])
     print_green("===========================================================================\n")
 
