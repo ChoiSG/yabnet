@@ -16,9 +16,9 @@ from colorama import Fore,Style
 
 def print_green(strings):
     try:
-        print(Fore.BLUE + strings + Style.RESET_ALL)
+        print(Fore.GREEN + strings + Style.RESET_ALL)
     except Exception as e:
-        print(Fore.BLUE + strings.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
+        print(Fore.GREEN + strings.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 
 def print_blue(strings):
     try:
@@ -28,9 +28,9 @@ def print_blue(strings):
 
 def print_red(string):
     try:
-        print(Fore.BLUE + string + Style.RESET_ALL)
+        print(Fore.RED + string + Style.RESET_ALL)
     except Exception as e:
-        print(Fore.BLUE + string.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
+        print(Fore.RED + string.encode('ascii',errors='ignore').decode('ascii') + Style.RESET_ALL)
 
 
 def generateTarget(common, cloud_common, teams, targets, cloud_targets):

