@@ -523,6 +523,8 @@ def refresh():
 
     try:
         # If bot missed two~three heartbeat interval (default is 40seconds*3 = 120 seconds), then remove the bot. 
+        # This is a problem if the time is messed up - which is very common in competition 
+        # I need last time and current time 
         for bot in botlist:
             if (datetime.now() - bot.timestamp).total_seconds() > TIMER*3:
                 db.session.delete(bot)
@@ -754,6 +756,7 @@ def updatepwnboard():
             except Exception as e:
                 continue
 
+    return '' 
     """
     print("\n[DEBUG] Updating pwnboard... ", ', '.join(ips), "\n")
 
@@ -771,6 +774,7 @@ def updatepwnboard():
     
     return '' 
     """
+
 
 
 # ========================= Flask App Starts =========================

@@ -20,7 +20,7 @@ class ProdConfig(Config):
     FIRSTCONTACTKEY = "dudeOurRedteamalreadyhaslike30C2already-Friend"
 
     # This list should change every competition
-    PRIVILEGED_USERS = ['root','Administrator','SYSTEM','captain','firstmate','stowaway']
+    PRIVILEGED_USERS = ['root','Administrator','SYSTEM','sysadmin','admin']
 
 class DevConfig(Config):
     DEBUG = True
@@ -40,4 +40,4 @@ class DevConfig(Config):
     FIRSTCONTACTKEY = "dudeOurRedteamalreadyhaslike30C2already-Friend"
 
     # This list should change every competition
-    PRIVILEGED_USERS = ['root','Administrator','SYSTEM','captain','firstmate','stowaway']
+    PRIVILEGED_USERS = ['root','Administrator','SYSTEM','sysadmin','admin']

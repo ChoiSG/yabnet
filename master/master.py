@@ -265,6 +265,8 @@ ___  ___          _              _____                       _
     list_parser = argparse.ArgumentParser()
     list_parser.add_argument('-f', '--find', type=str, help='Find specific agent by ip address')
     list_parser.add_argument('hostname', nargs='?', help='Retrieve a list of all team\'s specific hostname machine')
+    list_parser.add_argument('-u', '--unique', action="store_true", help='Display unique agents based on ip addr')
+    #list_parser.add_argument('-g', '--grep', type=str, help='Find specific attribute from list of machines')
     @cmd2.with_category(INFORMATIONAL_CATEGORY)
     @cmd2.with_argparser(list_parser)
     def do_list(self, args):
@@ -300,9 +302,10 @@ ___  ___          _              _____                       _
             pd.set_option("display.colheader_justify","center")
             df = pd.DataFrame(res.json())
             df.columns = ['ID','IP','OS','User','PID','Last Seen']
+            df.sort_values('ID', ascending=False)
+            if args.unique == True:
+                df.IP.unique()
             df_string = df.to_string(index=False)
-            #print(df_string)
-            #print(type(df_string))
 
             printoutput = "\n ==============================================================================\n"
             printoutput += df_string

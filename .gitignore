@@ -4,7 +4,9 @@
 /agent/agent_deploy.spec
 /agent/agent
 /agent/agent.exe
+/agent/ezclap.exe
 /agent/demo
+/utils/boxes.json
 /server/uploads/*
 /server/postgres-data/*
 /server/migrations/*

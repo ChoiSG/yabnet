@@ -1,27 +1,22 @@
 {
-    "teams": ["2","3","4","5","6","7","8","9","10"],
-    "internalBox": ["2","3","4","5","6","7","8"],
-    "cloudBox": ["2","3","4","5","6"],
+    "teams": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14"],
+    "internalBox": ["10","30","40","50","60","70"],
+    "cloudBox": ["2","3","4","5","10"],
 
     "internal_win": [
         {
-            "name": "annebonny",
-            "ip": "2",
+            "name": "core",
+            "ip": "50",
             "os": "windows"
         },
         {
-            "name": "maryread",
-            "ip": "5",
+            "name": "dc",
+            "ip": "60",
             "os": "windows"
         },
         {
-            "name": "edwardteach",
-            "ip": "6",
-            "os": "windows"
-        },
-        {
-            "name": "captaincrapo",
-            "ip": "7",
+            "name": "win10",
+            "ip": "70",
             "os": "windows"
         }
     ],
@@ -29,45 +24,50 @@
 
     "internal_lin": [
         {
-            "name": "williamkidd",
-            "ip": "3",
-            "os": "windows"
+            "name": "rogue",
+            "ip": "10",
+            "os": "linux"
         },
         {
-            "name": "calicojack",
-            "ip": "4",
-            "os": "windows"
+            "name": "ubuntu",
+            "ip": "40",
+            "os": "linux"
         },
         {
-            "name": "canoot",
-            "ip": "8",
-            "os": "windows"
+            "name": "centos",
+            "ip": "30",
+            "os": "linux"
         }
     ],
 
     "cloud_win": [
         {
-            "name": "lockelamora",
-            "ip": "5",
+            "name": "ftp",
+            "ip": "4",
             "os": "windows"
         }
     ],
 
     "cloud_lin": [
         {
-            "name": "nemo",
+            "name": "ecommerce",
             "ip": "2",
-            "os": "windows"
+            "os": "linux"
         },
         {
-            "name": "gunner",
+            "name": "db",
             "ip": "3",
-            "os": "windows"
+            "os": "linux"
         },
         {
-            "name": "laurellabonaire",
-            "ip": "4",
-            "os": "windows"
+            "name": "gitlab",
+            "ip": "5",
+            "os": "linux"
+        },
+        {
+            "name": "gaming",
+            "ip": "10",
+            "os": "linux"
         }
     ],
 
