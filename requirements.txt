@@ -3,7 +3,7 @@ requests==2.22.0
 pandas==0.25.3
 Flask_SQLAlchemy==2.4.0
 psycopg2==2.8.4
-paramiko==2.6.0
+paramiko==2.10.1
 Werkzeug==0.16.0
 scp==0.13.2
 cmd2==0.9.21
